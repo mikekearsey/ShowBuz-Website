@@ -1,3 +1,4 @@
+import { ContactEmail } from "./ContactEmail";
 import { Logo } from "./Logo";
 import { StoreButtons } from "./StoreButtons";
 
@@ -43,9 +44,7 @@ export function Footer() {
           <a href="#download" className="hover:text-foreground">
             Download
           </a>
-          <a href="mailto:admin@showbuz.app" className="hover:text-foreground">
-            admin@showbuz.app
-          </a>
+          <ContactEmail className="underline decoration-white/35 underline-offset-4 hover:text-foreground hover:decoration-buzz" />
         </div>
       </div>
     </footer>
