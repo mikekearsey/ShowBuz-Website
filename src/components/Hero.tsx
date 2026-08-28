@@ -42,8 +42,6 @@ export function Hero() {
           <h1 className="font-display text-4xl leading-[1.08] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
             Your diary.
             <span className="mt-1 block bg-linear-to-r from-buzz to-buzz-bright bg-clip-text text-transparent">
-              Never double-book.
-              <br />
               Never miss a show.
             </span>
           </h1>
@@ -55,7 +53,7 @@ export function Hero() {
           <div className="mt-6 grid max-w-xl grid-cols-2 grid-rows-[auto_auto_auto] gap-x-3 gap-y-1">
             <a
               href="#chairs"
-              className="row-span-3 grid grid-rows-subgrid rounded-2xl border border-line bg-surface p-4 transition hover:border-buzz/40"
+              className="col-start-1 row-span-3 grid grid-rows-subgrid rounded-2xl border border-line bg-surface p-4 transition hover:border-buzz/40"
             >
               <p className="text-[11px] font-semibold tracking-widest text-buzz uppercase">
                 For chairs
@@ -64,12 +62,12 @@ export function Hero() {
                 Published diary.
               </p>
               <p className="text-sm font-semibold leading-snug">
-                Auto-reconfirm on show morning.
+                Auto reconfirm on show morning.
               </p>
             </a>
             <a
               href="#deps"
-              className="row-span-3 grid grid-rows-subgrid rounded-2xl border border-line bg-surface p-4 transition hover:border-buzz/40"
+              className="col-start-2 row-span-3 grid grid-rows-subgrid rounded-2xl border border-line bg-surface p-4 transition hover:border-buzz/40"
             >
               <p className="text-[11px] font-semibold tracking-widest text-buzz uppercase">
                 For deps

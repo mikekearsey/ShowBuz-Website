@@ -19,7 +19,7 @@ const chairFeatures: Feature[] = [
   },
   {
     title: "One ask, a trail you can follow",
-    body: "Select a dep or Auto Book the list. Multi-date asks live on the night. Auto-reconfirm checks them on the morning of the show — you know they’re coming, without a chase.",
+    body: "Select a dep or Auto Book the list. Multi-date asks live on the night. Auto reconfirm checks them on the morning of the show — you know they’re coming, without a chase.",
     icon: TrailIcon,
   },
 ];
@@ -36,8 +36,8 @@ const depFeatures: Feature[] = [
     icon: TapIcon,
   },
   {
-    title: "Auto-reconfirm on the morning of the show",
-    body: "Available is pencilled; confirmed is booked. Auto-reconfirm does the morning check for you — the chair sees you’re coming. The night is not assumed.",
+    title: "Auto reconfirm on the morning of the show",
+    body: "Available is pencilled; confirmed is booked. Auto reconfirm does the morning check for you — the chair sees you’re coming. The night is not assumed.",
     icon: ReconfirmIcon,
   },
 ];
