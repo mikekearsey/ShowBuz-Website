@@ -36,12 +36,15 @@ export function Footer() {
           <Logo size={28} className="h-7 w-7 shadow-none" alt="" />
           <p>© 2026 Mike Kearsey Limited</p>
         </div>
-        <div className="flex gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
           <a href="#features" className="hover:text-foreground">
             Features
           </a>
           <a href="#download" className="hover:text-foreground">
             Download
+          </a>
+          <a href="mailto:admin@showbuz.app" className="hover:text-foreground">
+            admin@showbuz.app
           </a>
         </div>
       </div>
