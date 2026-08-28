@@ -9,7 +9,7 @@ type Feature = {
 const chairFeatures: Feature[] = [
   {
     title: "The published diary, not a copied PDF",
-    body: "Official listings load into day, week, and month. Curtain times come from the listing — you are not retyping a schedule into Notes.",
+    body: "Official listings load automatically into day, week, and month. Curtain times come from the official listing — you are no longer retyping a schedule into your diary.",
     icon: CalendarIcon,
   },
   {
@@ -19,7 +19,7 @@ const chairFeatures: Feature[] = [
   },
   {
     title: "One ask, a trail you can follow",
-    body: "Select a dep or Auto Book the list. Multi-date asks live on the night. Day-of reminders lock the booking in — not a message you have to hunt for later.",
+    body: "Select a dep or Auto Book the list. Multi-date asks live on the night. Auto-reconfirm checks them on the morning of the show — you know they’re coming, without a chase.",
     icon: TrailIcon,
   },
 ];
@@ -36,8 +36,8 @@ const depFeatures: Feature[] = [
     icon: TapIcon,
   },
   {
-    title: "Pencilled versus confirmed is clear",
-    body: "Available means you are free and waiting. Confirmed means you are booked. Reconfirm on the morning of the show so the night is not assumed.",
+    title: "Auto-reconfirm on the morning of the show",
+    body: "Available is pencilled; confirmed is booked. Auto-reconfirm does the morning check for you — the chair sees you’re coming. The night is not assumed.",
     icon: ReconfirmIcon,
   },
 ];
@@ -55,8 +55,8 @@ export function FeatureGrid() {
           </h2>
           <p className="mt-4 text-muted text-pretty">
             Designed by musicians, for musicians. The path from ask to confirmed
-            lives on the night — not buried in email, a phone call, or a
-            WhatsApp thread.
+            lives on the app — not buried in emails, phone calls, or WhatsApp
+            threads.
           </p>
         </div>
         <div className="mt-14 grid gap-10 lg:grid-cols-2 lg:gap-8">

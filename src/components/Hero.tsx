@@ -50,26 +50,26 @@ export function Hero() {
             confirmed — instead of a yes buried in email, a phone call, or a
             WhatsApp thread.
           </p>
-          <div className="mt-6 grid max-w-xl gap-3 sm:grid-cols-2">
+          <div className="mt-6 grid max-w-xl grid-cols-2 gap-x-3 gap-y-1">
             <a
               href="#chairs"
-              className="rounded-2xl border border-line bg-surface p-4 transition hover:border-buzz/40"
+              className="grid grid-rows-subgrid row-span-2 rounded-2xl border border-line bg-surface p-4 transition hover:border-buzz/40"
             >
               <p className="text-[11px] font-semibold tracking-widest text-buzz uppercase">
                 For chairs
               </p>
-              <p className="mt-1 text-sm font-semibold leading-snug">
-                Published diary. Status on every night.
+              <p className="text-sm font-semibold leading-snug">
+                Published diary. Auto-reconfirm on show morning.
               </p>
             </a>
             <a
               href="#deps"
-              className="rounded-2xl border border-line bg-surface p-4 transition hover:border-buzz/40"
+              className="grid grid-rows-subgrid row-span-2 rounded-2xl border border-line bg-surface p-4 transition hover:border-buzz/40"
             >
               <p className="text-[11px] font-semibold tracking-widest text-buzz uppercase">
                 For deps
               </p>
-              <p className="mt-1 text-sm font-semibold leading-snug">
+              <p className="text-sm font-semibold leading-snug">
                 Every ask in one diary. Tap to reply.
               </p>
             </a>
