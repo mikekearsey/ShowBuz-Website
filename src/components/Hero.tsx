@@ -1,0 +1,95 @@
+import Image from "next/image";
+import { Logo } from "./Logo";
+import { StoreButtons } from "./StoreButtons";
+
+/** iPhone 15/16 logical aspect: 393 × 852 */
+export function PhonePreview() {
+  return (
+    <div className="relative mx-auto w-[228px] sm:w-[248px] lg:w-[260px]">
+      <div className="relative rounded-[2.65rem] bg-[#1a1a1c] p-[9px] shadow-[0_40px_80px_rgb(0_0_0_/_0.55),inset_0_0_0_1px_rgb(255_255_255_/_0.08)]">
+        <span className="absolute top-[18%] -left-[3px] h-8 w-[3px] rounded-l-sm bg-[#2a2a2c]" />
+        <span className="absolute top-[28%] -left-[3px] h-12 w-[3px] rounded-l-sm bg-[#2a2a2c]" />
+        <span className="absolute top-[38%] -left-[3px] h-12 w-[3px] rounded-l-sm bg-[#2a2a2c]" />
+        <span className="absolute top-[30%] -right-[3px] h-16 w-[3px] rounded-r-sm bg-[#2a2a2c]" />
+
+        <div className="relative aspect-[393/852] overflow-hidden rounded-[2.15rem] bg-black">
+          <Image
+            src="/app-screen.png"
+            alt="ShowBuz day view for West Side Story at Theatre Royal, reconfirming John"
+            fill
+            priority
+            unoptimized
+            sizes="(min-width: 1024px) 260px, (min-width: 640px) 248px, 228px"
+            className="object-cover object-top"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function Hero() {
+  return (
+    <section className="relative overflow-hidden">
+      <div className="hero-glow pointer-events-none absolute inset-0" />
+      <div className="grain pointer-events-none absolute inset-0 opacity-[0.12] mix-blend-overlay" />
+      <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_auto] lg:gap-12 lg:py-20">
+        <div>
+          <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium tracking-wide text-muted uppercase">
+            <span className="h-1.5 w-1.5 rounded-full bg-buzz-bright" />
+            Designed by musicians, for musicians
+          </p>
+          <h1 className="font-display text-4xl leading-[1.08] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+            Your diary.{" "}
+            <span className="bg-linear-to-r from-buzz to-buzz-bright bg-clip-text text-transparent">
+              Never double-book.
+            </span>
+          </h1>
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted text-pretty">
+            Every booking has a clear, traceable path — requested, available,
+            confirmed — instead of a yes buried in email, a phone call, or a
+            WhatsApp thread.
+          </p>
+          <div className="mt-6 grid max-w-xl gap-3 sm:grid-cols-2">
+            <a
+              href="#chairs"
+              className="rounded-2xl border border-line bg-surface p-4 transition hover:border-buzz/40"
+            >
+              <p className="text-[11px] font-semibold tracking-widest text-buzz uppercase">
+                For chairs
+              </p>
+              <p className="mt-1 text-sm font-semibold leading-snug">
+                Published diary. Status on every night.
+              </p>
+            </a>
+            <a
+              href="#deps"
+              className="rounded-2xl border border-line bg-surface p-4 transition hover:border-buzz/40"
+            >
+              <p className="text-[11px] font-semibold tracking-widest text-buzz uppercase">
+                For deps
+              </p>
+              <p className="mt-1 text-sm font-semibold leading-snug">
+                Every ask in one diary. Tap to reply.
+              </p>
+            </a>
+          </div>
+          <div className="mt-8">
+            <StoreButtons size="lg" />
+          </div>
+          <p className="mt-4 text-sm text-muted">Free for chairs and covers.</p>
+        </div>
+        <div className="relative mx-auto">
+          <div className="stave pointer-events-none absolute inset-x-0 top-1/3 h-28 opacity-40" />
+          <div className="pointer-events-none absolute top-1/2 left-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-700/35 blur-3xl" />
+          <Logo
+            size={144}
+            priority
+            className="pointer-events-none absolute -top-3 -right-3 z-10 h-20 w-20 sm:-right-5 sm:h-24 sm:w-24"
+          />
+          <PhonePreview />
+        </div>
+      </div>
+    </section>
+  );
+}
