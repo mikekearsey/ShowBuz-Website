@@ -42,7 +42,7 @@ export function Hero() {
           <h1 className="font-display text-4xl leading-[1.08] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
             Your diary.
             <span className="mt-1 block bg-linear-to-r from-buzz to-buzz-bright bg-clip-text text-transparent">
-              Never miss a show.
+              Fixed.
             </span>
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted text-pretty">
