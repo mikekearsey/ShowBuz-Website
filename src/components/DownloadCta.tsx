@@ -1,5 +1,6 @@
 import { ContactEmail } from "./ContactEmail";
 import { Logo } from "./Logo";
+import { PrivacyPolicy } from "./PrivacyPolicy";
 import { StoreButtons } from "./StoreButtons";
 
 export function DownloadCta() {
@@ -45,6 +46,7 @@ export function Footer() {
             Download
           </a>
           <ContactEmail className="underline decoration-white/35 underline-offset-4 hover:text-foreground hover:decoration-buzz" />
+          <PrivacyPolicy />
         </div>
       </div>
     </footer>
