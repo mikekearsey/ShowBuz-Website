@@ -1,6 +1,5 @@
 import { ContactEmail } from "./ContactEmail";
 import { Logo } from "./Logo";
-import { PrivacyPolicy } from "./PrivacyPolicy";
 import { StoreButtons } from "./StoreButtons";
 
 export function DownloadCta() {
@@ -39,14 +38,16 @@ export function Footer() {
           <p>© 2026 Mike Kearsey Limited</p>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-          <a href="#features" className="hover:text-foreground">
+          <a href="/#features" className="hover:text-foreground">
             Features
           </a>
-          <a href="#download" className="hover:text-foreground">
+          <a href="/#download" className="hover:text-foreground">
             Download
           </a>
           <ContactEmail className="underline decoration-white/35 underline-offset-4 hover:text-foreground hover:decoration-buzz" />
-          <PrivacyPolicy />
+          <a href="/privacy" className="hover:text-foreground">
+            Privacy Policy
+          </a>
         </div>
       </div>
     </footer>
