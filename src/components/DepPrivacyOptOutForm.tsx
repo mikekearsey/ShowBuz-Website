@@ -27,14 +27,17 @@ export function DepPrivacyOptOutForm() {
 
     setStatus({ kind: "submitting" });
     try {
-      const response = await fetch("/api/dep-privacy-opt-out", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: trimmedPhone,
-          email: trimmedEmail,
-        }),
-      });
+      const response = await fetch(
+        "https://bcpohnzywbpjmtixhung.supabase.co/functions/v1/dep-privacy-opt-out",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: trimmedPhone,
+            email: trimmedEmail,
+          }),
+        },
+      );
       const data = (await response.json()) as {
         ok?: boolean;
         message?: string;
