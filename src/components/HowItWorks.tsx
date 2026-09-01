@@ -30,7 +30,7 @@ export function HowItWorks() {
             How it works
           </p>
           <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
-            A night off, without the scramble.
+            The stress-free way to step away.
           </h2>
           <p className="mt-4 text-muted text-pretty">
             The app does the messaging. Your diary updates seamlessly.
