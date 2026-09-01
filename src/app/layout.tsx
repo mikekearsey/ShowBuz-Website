@@ -16,7 +16,7 @@ const syne = Syne({
 
 export const metadata: Metadata = {
   title: {
-    default: "ShowBuz — See at a glance that your night off is covered",
+    default: "ShowBuz — Deps sorted. Drama optional.",
     template: "%s · ShowBuz",
   },
   description:
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     "musician diary",
   ],
   openGraph: {
-    title: "ShowBuz — See at a glance that your night off is covered",
+    title: "ShowBuz — Deps sorted. Drama optional.",
     description:
       "Look at the diary, know the night is sorted, and stop thinking about it.",
     type: "website",

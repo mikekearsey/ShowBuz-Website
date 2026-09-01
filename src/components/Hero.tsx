@@ -46,7 +46,7 @@ export function Hero() {
             </span>
           </h1>
           <p className="mt-5 max-w-xl font-display text-xl font-bold tracking-tight text-pretty sm:text-2xl">
-            See at a glance that your night off is covered.
+            Deps sorted. Drama optional.
           </p>
           <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted text-pretty">
             The app messages your deps for you. They tap Available and it shows

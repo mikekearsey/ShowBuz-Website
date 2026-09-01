@@ -14,7 +14,7 @@ export function DownloadCta() {
             Get the app
           </p>
           <h2 className="relative mx-auto mt-3 max-w-2xl font-display text-3xl font-extrabold tracking-tight text-balance sm:text-5xl">
-            Open the diary. See the show&apos;s covered.
+            Your deps, your diary, one screen.
           </h2>
           <p className="relative mx-auto mt-4 max-w-lg text-muted text-pretty">
             Peace of mind at a glance.
