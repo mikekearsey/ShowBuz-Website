@@ -1,3 +1,5 @@
+import { DepPrivacyOptOutForm } from "@/components/DepPrivacyOptOutForm";
+
 const EMAIL = "admin@showbuz.app";
 
 function Mail() {
@@ -202,9 +204,20 @@ export function PrivacyPolicyDocument() {
       <h2>8. Your Rights</h2>
       <p>
         Under UK GDPR, you have the right to access, correct, delete, or export
-        your personal data, and to object to or restrict certain processing. To
-        exercise any of these rights, contact us at <Mail />.
+        your personal data, and to object to or restrict certain processing. If
+        you have a ShowBuz account, email <Mail />. We aim to acknowledge
+        within 72 hours and complete requests within 30 days.
       </p>
+      <h3 id="opt-out">Remove my contact details (no account needed)</h3>
+      <p>
+        If a chair stored your name, number, or email in their ShowBuz address
+        book and you do not have an account, you can remove those details here
+        or by replying <strong>STOP</strong> or <strong>opt out</strong> to a
+        ShowBuz WhatsApp or SMS. We match the mobile number or email the chair
+        used. This does not delete a ShowBuz account — account holders should
+        email <Mail />.
+      </p>
+      <DepPrivacyOptOutForm />
       <p>
         If you&apos;re not satisfied with how we&apos;ve handled your data, you
         have the right to complain to the UK Information Commissioner&apos;s
