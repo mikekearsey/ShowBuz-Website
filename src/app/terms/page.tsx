@@ -1,20 +1,20 @@
 import type { Metadata } from "next";
 import { Footer } from "@/components/DownloadCta";
 import { Header } from "@/components/Header";
-import { PrivacyPolicyDocument } from "@/components/PrivacyPolicyDocument";
+import { TermsOfUseDocument } from "@/components/TermsOfUseDocument";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy",
+  title: "Terms of Use",
   description:
-    "How ShowBuz collects, uses, and protects personal data for chairs, deps, and other performers.",
+    "Terms of Use for ShowBuz, the diary and dep booking tool for chairs and covers.",
 };
 
-export default function PrivacyPage() {
+export default function TermsPage() {
   return (
     <div className="flex flex-1 flex-col">
       <Header />
       <main className="flex-1 bg-white">
-        <PrivacyPolicyDocument />
+        <TermsOfUseDocument />
       </main>
       <Footer />
     </div>

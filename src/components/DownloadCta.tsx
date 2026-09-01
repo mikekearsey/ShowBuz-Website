@@ -48,6 +48,9 @@ export function Footer() {
           <a href="/privacy" className="hover:text-foreground">
             Privacy Policy
           </a>
+          <a href="/terms" className="hover:text-foreground">
+            Terms of Use
+          </a>
         </div>
       </div>
     </footer>

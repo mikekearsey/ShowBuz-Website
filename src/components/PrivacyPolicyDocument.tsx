@@ -1,343 +1,248 @@
 const EMAIL = "admin@showbuz.app";
 
 function Mail() {
-  return (
-    <a href={`mailto:${EMAIL}`} className="font-bold text-black no-underline">
-      {EMAIL}
-    </a>
-  );
+  return <a href={`mailto:${EMAIL}`}>{EMAIL}</a>;
 }
 
 export function PrivacyPolicyDocument() {
   return (
-    <article
-      className="mx-auto w-full max-w-[210mm] bg-white px-[18mm] py-[16mm] text-black shadow-[0_24px_60px_rgb(0_0_0_/_0.35)] sm:px-[20mm] sm:py-[18mm]"
-      style={{
-        fontFamily: "Arial, Helvetica, sans-serif",
-        fontSize: "10.9pt",
-        lineHeight: 1.35,
-      }}
-    >
-      <h1 className="mb-[10pt] text-[16.3pt] font-normal">ShowBuz Privacy Policy</h1>
-
-      <p className="mb-[2pt]">
-        <strong>Effective date:</strong> 31st August 2026
-      </p>
-      <p className="mb-[12pt]">
-        <strong>Last updated:</strong> 31st August 2026
+    <article className="legal-doc">
+      <h1>ShowBuz Privacy Policy</h1>
+      <p className="meta">
+        Effective date: September 1, 2026 · Last updated: September 1, 2026
       </p>
 
-      <p className="mb-[10pt]">
-        ShowBuz (&quot;the app&quot;, &quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is
-        a scheduling and deputy (&quot;dep&quot;) booking tool for musicians and
-        other performers working in theatre and live entertainment. This Privacy
-        Policy explains how we collect, use, disclose, and protect your personal
-        data, and the data of individuals you log within the app.
-      </p>
-      <p className="mb-[10pt]">
-        ShowBuz is provided by ShowBuz. We operate as the Data Controller for the
-        personal data processed through our service under the UK General Data
-        Protection Regulation (UK GDPR) and the Data Protection Act 2018.
-      </p>
-      <p className="mb-[16pt]">
-        For any privacy-related inquiries, you can contact us at <Mail />.
+      <p>
+        ShowBuz (&quot;the app&quot;, &quot;we&quot;, &quot;us&quot;) is a
+        scheduling and deputy (&quot;dep&quot;) booking tool for musicians and
+        other performers working in theatre and live entertainment. This policy
+        explains what personal data ShowBuz collects, how it is used, and the
+        choices available to you.
       </p>
 
-      <h2 className="mb-[8pt] text-[16.3pt] font-normal">
-        1. Data We Collect and How We Source It
-      </h2>
-      <p className="mb-[12pt]">
-        We process personal data from two categories of data subjects:{" "}
-        <strong>Account Holders</strong> (users who register for the app) and{" "}
-        <strong>Deputies / Network Performers</strong> (individuals whose details
-        are inputted by Account Holders).
+      <p>
+        ShowBuz is provided by ShowBuz, who is the data controller for the
+        purposes of UK GDPR and the Data Protection Act 2018.
       </p>
 
-      <h3 className="mb-[8pt] text-[16.3pt] font-normal">
-        A. Data Collected Directly From You (Account Holders)
-      </h3>
-      <ul className="mb-[12pt] list-disc space-y-[8pt] pl-[18pt]">
+      <h2>1. Data We Collect</h2>
+
+      <p>
+        <strong>Account information.</strong> When you create a ShowBuz account,
+        we collect your name and email address, and authentication information
+        handled via our authentication provider.
+      </p>
+
+      <p>
+        <strong>Show and booking data.</strong> Information you enter about
+        shows you&apos;re involved in: show name, venue, schedule, chair/role
+        details, and related booking information.
+      </p>
+
+      <p>
+        <strong>Contact details of deps and other performers.</strong> ShowBuz
+        lets you build a personal address book of deputies (&quot;deps&quot;) you
+        work with, including their name, phone number, email address, and the
+        instrument(s) they play. This information is entered by you, about other
+        individuals, for the purpose of contacting them regarding cover work. You
+        are responsible for having an appropriate basis (such as their consent to
+        be contacted, or an existing professional relationship) for storing and
+        using their contact details within the app. When a booking request is
+        sent to a dep, their name and contact details are used to deliver that
+        request via the message channels described below.
+      </p>
+
+      <p>
+        <strong>Calendar access.</strong> If you enable calendar sync, ShowBuz
+        reads and/or writes calendar events (Apple Calendar) to keep your
+        performance schedule up to date on your device&apos;s calendar. This
+        requires your explicit permission, granted through iOS system settings,
+        and can be revoked at any time.
+      </p>
+
+      <p>
+        <strong>Contacts access.</strong> If you choose to import a dep from your
+        phone&apos;s contacts, ShowBuz reads the specific contact you select
+        (name, phone, email) to pre-fill their details in the app. ShowBuz does
+        not access your full contacts list without your action.
+      </p>
+
+      <p>
+        <strong>Location data.</strong> If you enable Travel Assist (live
+        train/journey planning), ShowBuz uses your device&apos;s location,
+        including in the background if you grant that permission, to provide
+        relevant travel information for your upcoming performances. This feature
+        is optional and location access can be disabled at any time in iOS
+        settings.
+      </p>
+
+      <p>
+        <strong>Push notification tokens.</strong> To deliver notifications
+        (e.g. a dep responding to a request, a day-of-show reminder), we store a
+        device push token associated with your account.
+      </p>
+
+      <p>
+        <strong>Crash and diagnostic data.</strong> If the app crashes or
+        encounters an error, we collect diagnostic information (device type, OS
+        version, and the state of the app at the time of the crash) via our
+        crash-reporting provider, Sentry, to help us fix issues. This may
+        occasionally include fragments of other data present in the app&apos;s
+        memory at the time of the crash.
+      </p>
+
+      <p>
+        <strong>Usage data.</strong> Basic information about how the app is used,
+        to help us understand which features are useful and identify problems.
+      </p>
+
+      <h2>2. How We Use This Data</h2>
+      <ul>
         <li>
-          <strong>Account Information:</strong> Name, email address, and secure
-          authentication tokens handled by our identity provider.
+          To provide the core functionality of the app: managing your shows,
+          diary, and dep booking workflow.
         </li>
         <li>
-          <strong>Show and Booking Data:</strong> Show names, venues, performance
-          dates, rehearsal schedules, chair/role details, and linked
-          financial/booking rates you manually enter.
+          To send booking requests, availability polls, and related messages to
+          deps on your behalf, via SMS, WhatsApp, and/or email as applicable.
         </li>
         <li>
-          <strong>Device Permissions (Optional):</strong>
-          <ul className="mt-[6pt] list-[circle] space-y-[6pt] pl-[18pt]">
-            <li>
-              <em>Calendar Access:</em> If enabled, we read and write calendar
-              events (e.g., Apple Calendar) to sync your schedule locally on your
-              device.
-            </li>
-            <li>
-              <em>Contacts Access:</em> If you choose to import a dep, we only
-              access the specific contact entry you select to pre-fill their
-              profile. We do not download or scrape your entire contact book.
-            </li>
-            <li>
-              <em>Location Data:</em> If you enable &quot;Travel Assist&quot;, we
-              collect your device&apos;s GPS location (including in the
-              background while the app is closed) to send real-time travel and
-              journey notifications.
-            </li>
-          </ul>
+          To sync your schedule with your device calendar, where enabled.
         </li>
         <li>
-          <strong>Push Notification Tokens:</strong> Unique device tokens
-          required to deliver transactional alerts (e.g., booking confirmations).
+          To provide travel/journey information, where Travel Assist is enabled.
         </li>
         <li>
-          <strong>Usage and Diagnostic Data:</strong> Technical logs, device
-          type, operating system version, app usage statistics, and crash reports
-          processed via Sentry (which may contain temporary fragments of app
-          memory at the exact moment of a crash).
+          To send you notifications relevant to your bookings and schedule.
+        </li>
+        <li>To diagnose and fix technical problems.</li>
+        <li>
+          To communicate with you about your account or the service, where
+          necessary.
         </li>
       </ul>
 
-      <h3 className="mb-[8pt] text-[16.3pt] font-normal">
-        B. Data Collected From Third Parties (Deputies / Network Performers)
-      </h3>
-      <ul className="mb-[16pt] list-disc space-y-[8pt] pl-[18pt]">
+      <h2>3. Legal Basis for Processing (UK GDPR)</h2>
+      <ul>
         <li>
-          <strong>Dep Contact Details:</strong> Name, phone number, email
-          address, and instrument(s) played.
+          <strong>Contract:</strong> processing your account and show data is
+          necessary to provide the service you&apos;ve signed up for.
         </li>
         <li>
-          <strong>Source:</strong> This data is not provided by the individual
-          themselves, but is inputted manually or imported from device contacts
-          by an Account Holder to manage their professional network.
-        </li>
-      </ul>
-
-      <h2 className="mb-[8pt] text-[16.3pt] font-normal">
-        2. Legal Bases for Processing Under UK GDPR
-      </h2>
-      <p className="mb-[8pt]">
-        We only process personal data when we have a valid legal framework. The
-        legal bases we rely on are:
-      </p>
-      <ol className="mb-[16pt] list-decimal space-y-[8pt] pl-[18pt]">
-        <li>
-          <strong>Contractual Necessity (Art. 6(1)(b) UK GDPR):</strong> To set
-          up your account, manage your show diary, process your workflow, and
-          deliver core app services.
+          <strong>Legitimate interests:</strong> diagnostic/crash data and basic
+          usage data, to maintain and improve the app.
         </li>
         <li>
-          <strong>Legitimate Interests (Art. 6(1)(f) UK GDPR):</strong>
-          <ul className="mt-[6pt] list-[circle] space-y-[6pt] pl-[18pt]">
-            <li>
-              <em>For Account Holders:</em> To monitor app stability, fix bugs
-              via diagnostic tools, and improve app functionality.
-            </li>
-            <li>
-              <em>For Deputies / Third Parties:</em> To allow Account Holders to
-              efficiently manage professional business networks and send
-              freelance work offers. It is within the reasonable expectations of
-              freelance performers to be contacted for work opportunities by
-              colleagues.
-            </li>
-          </ul>
-        </li>
-        <li>
-          <strong>Consent (Art. 6(1)(a) UK GDPR):</strong> For processing precise
-          device location (Travel Assist) and sending device Push Notifications.
-          This consent can be instantly revoked at any time via your
-          device&apos;s operating system settings.
-        </li>
-      </ol>
-
-      <h2 className="mb-[8pt] text-[16.3pt] font-normal">
-        3. Communication and Our Article 14 Obligations
-      </h2>
-      <p className="mb-[8pt]">
-        Because Account Holders input personal data belonging to third-party
-        Deputies, we are required by Article 14 of the UK GDPR to inform those
-        individuals that we hold their information.
-      </p>
-      <p className="mb-[8pt]">
-        To comply with the law without disrupting your professional workflow:
-      </p>
-      <ul className="mb-[16pt] list-disc space-y-[8pt] pl-[18pt]">
-        <li>
-          <strong>Transparency at First Contact:</strong> The very first time an
-          Account Holder sends an automated booking request or availability poll
-          to a Dep via SMS, WhatsApp, or email, ShowBuz will append a clear,
-          non-intrusive link to this Privacy Policy.
-        </li>
-        <li>
-          <strong>Direct Opt-Out:</strong> That message will inform the Dep that
-          their details are stored securely in a colleague&apos;s digital address
-          book within ShowBuz, and provide them with an immediate method to
-          opt-out and have their data permanently deleted from our servers.
+          <strong>Consent:</strong> location access and push notifications, which
+          require your explicit permission and can be withdrawn at any time via
+          iOS settings.
         </li>
       </ul>
 
-      <h2 className="mb-[8pt] text-[16.3pt] font-normal">
-        4. Data Sharing and Third-Party Service Providers
-      </h2>
-      <p className="mb-[8pt]">
-        We do not sell, rent, or trade personal data. We only share data with
-        trusted service providers who act as Data Processors under strict
-        contractual boundaries:
+      <h2>4. Third-Party Service Providers</h2>
+      <p>
+        ShowBuz uses the following third-party services to operate. Each
+        processes data only as necessary to provide their specific function:
       </p>
-      <ul className="mb-[16pt] list-disc space-y-[8pt] pl-[18pt]">
+      <ul>
         <li>
-          <strong>Supabase:</strong> Secure cloud database hosting and backend
+          <strong>Supabase</strong> — database hosting and backend
           infrastructure.
         </li>
         <li>
-          <strong>Sentry:</strong> Real-time software crash analysis and
-          debugging logs.
+          <strong>Sentry</strong> — crash and error reporting.
         </li>
         <li>
-          <strong>Twilio &amp; WhatsApp Business API:</strong> Core
-          infrastructure to route SMS and instant messages to your network.
+          <strong>Twilio and WhatsApp</strong> — delivery of SMS/WhatsApp
+          messages to deps.
         </li>
         <li>
-          <strong>Apple:</strong> Relaying push tokens and coordinating local
-          device permission frameworks.
+          <strong>Apple</strong> — push notification delivery, and
+          calendar/contacts access where you grant permission.
         </li>
       </ul>
-
-      <h2 className="mb-[8pt] text-[16.3pt] font-normal">
-        5. International Data Transfers
-      </h2>
-      <p className="mb-[8pt]">
-        Some of our third-party infrastructure providers operate servers located
-        outside of the United Kingdom and the European Economic Area (EEA),
-        primarily in the United States.
-      </p>
-      <p className="mb-[16pt]">
-        Whenever your data is transferred outside the UK, we ensure a legally
-        compliant mechanism is in place. We secure these transfers using the{" "}
-        <strong>UK International Data Transfer Agreement (IDTA)</strong> or the{" "}
-        <strong>
-          UK Addendum to the European Commission’s Standard Contractual Clauses
-          (SCCs)
-        </strong>
-        , alongside technical safeguards like end-to-end transport layer
-        encryption.
-      </p>
-
-      <h2 className="mb-[8pt] text-[16.3pt] font-normal">
-        6. Data Retention and Deletion Timelines
-      </h2>
-      <p className="mb-[8pt]">
-        We abide by the principle of storage limitation. Data is kept no longer
-        than necessary:
-      </p>
-      <ul className="mb-[16pt] list-disc space-y-[8pt] pl-[18pt]">
-        <li>
-          <strong>Active Accounts:</strong> Personal data, show records, and
-          custom dep profiles are retained as long as your account remains
-          active.
-        </li>
-        <li>
-          <strong>Account Closure:</strong> If you close your account or request
-          data deletion, all personal data, show histories, and associated dep
-          records will be permanently erased or anonymized from our production
-          systems within <strong>30 days</strong>.
-        </li>
-        <li>
-          <strong>Inactivity Purge:</strong> Accounts that remain completely
-          inactive for a continuous period of <strong>24 months</strong> will be
-          automatically flagged, notified via email, and subsequently deleted
-          along with all associated records.
-        </li>
-        <li>
-          <strong>Dep Data Removal:</strong> If an Account Holder deletes an
-          individual dep from their application address book, that dep&apos;s
-          record is instantly wiped from our active databases.
-        </li>
-      </ul>
-
-      <h2 className="mb-[8pt] text-[16.3pt] font-normal">
-        7. Your Statutory Rights
-      </h2>
-      <p className="mb-[8pt]">
-        Under the UK GDPR, both Account Holders and Deputies possess
-        comprehensive data rights. You can request to exercise these at any time
-        by emailing <Mail />:
-      </p>
-      <ul className="mb-[10pt] list-disc space-y-[8pt] pl-[18pt]">
-        <li>
-          <strong>Right of Access:</strong> Request a complete copy of all
-          personal data we hold about you.
-        </li>
-        <li>
-          <strong>Right to Rectification:</strong> Request corrections to
-          inaccurate or incomplete personal records.
-        </li>
-        <li>
-          <strong>Right to Erasure (&quot;Right to be Forgotten&quot;):</strong>{" "}
-          Request permanent deletion of your data from our systems.
-        </li>
-        <li>
-          <strong>Right to Restrict or Object to Processing:</strong> Challenge
-          our reliance on Legitimate Interests to process your data, or restrict
-          how we use it.
-        </li>
-        <li>
-          <strong>Right to Data Portability:</strong> Request a digital,
-          machine-readable export of the data you provided to us.
-        </li>
-      </ul>
-      <p className="mb-[8pt]">
-        If you believe we have processed your data unlawfully, you have the right
-        to lodge a formal complaint with the UK supervisory authority:
-      </p>
-      <ul className="mb-[16pt] list-disc space-y-[4pt] pl-[18pt]">
-        <li>
-          <strong>Information Commissioner’s Office (ICO)</strong>
-        </li>
-        <li>
-          Website:{" "}
-          <a
-            href="https://ico.org.uk"
-            className="text-[#0000ee] underline"
-            rel="noreferrer"
-            target="_blank"
-          >
-            https://ico.org.uk
-          </a>
-        </li>
-      </ul>
-
-      <h2 className="mb-[8pt] text-[16.3pt] font-normal">8. Security Measures</h2>
-      <p className="mb-[16pt]">
-        We enforce rigorous technical and organisational controls to protect
-        data. This includes using Secure Socket Layer (SSL/TLS) encryption for
-        all data in transit, strict access control restrictions on backend cloud
-        databases, and automated dependency scanning. While we deploy
-        industry-standard architecture, no digital transmission or storage engine
-        is 100% secure, and we cannot guarantee absolute security.
-      </p>
-
-      <h2 className="mb-[8pt] text-[16.3pt] font-normal">
-        9. Children&apos;s Privacy
-      </h2>
-      <p className="mb-[16pt]">
-        ShowBuz is a specialised administrative utility designed strictly for
-        working professional adults in the entertainment sector. We do not
-        knowingly target, market to, or collect data from individuals under the
-        age of 18.
-      </p>
-
-      <h2 className="mb-[8pt] text-[16.3pt] font-normal">
-        10. Modifications to This Policy
-      </h2>
       <p>
-        We may routinely update this policy to reflect product feature shifts or
-        changes in legal regulations. Material modifications will be broadcasted
-        to users via an in-app notice or directly through email. The &quot;Last
-        Updated&quot; timestamp at the apex of this document will alter
-        accordingly.
+        These providers may process data outside the UK/EEA. Where this occurs,
+        we rely on appropriate safeguards such as Standard Contractual Clauses.
       </p>
+
+      <h2>5. Data Sharing</h2>
+      <p>We do not sell your personal data. Data is shared only:</p>
+      <ul>
+        <li>
+          With the third-party service providers listed above, to operate the
+          app.
+        </li>
+        <li>
+          With a dep you contact, to the extent necessary to send them a booking
+          request (they will see the show/performance details relevant to that
+          request).
+        </li>
+        <li>
+          With a travel companion or family member you explicitly invite to share
+          a trip or show, where the app&apos;s sharing features are used.
+        </li>
+        <li>Where required by law.</li>
+      </ul>
+
+      <h2>6. Data Retention</h2>
+      <p>
+        We retain your account and show data for as long as your account is
+        active. Dep contact details you&apos;ve entered are retained until you
+        delete them or close your account. You can request deletion of your
+        account and associated data at any time (see Section 8).
+      </p>
+
+      <h2>7. Children&apos;s Privacy</h2>
+      <p>
+        ShowBuz is intended for use by working professionals and is not directed
+        at children. We do not knowingly collect data from anyone under 18.
+      </p>
+
+      <h2>8. Your Rights</h2>
+      <p>
+        Under UK GDPR, you have the right to access, correct, delete, or export
+        your personal data, and to object to or restrict certain processing. To
+        exercise any of these rights, contact us at <Mail />.
+      </p>
+      <p>
+        If you&apos;re not satisfied with how we&apos;ve handled your data, you
+        have the right to complain to the UK Information Commissioner&apos;s
+        Office (ICO) at{" "}
+        <a href="https://ico.org.uk" rel="noreferrer" target="_blank">
+          ico.org.uk
+        </a>
+        .
+      </p>
+
+      <h2>9. Security</h2>
+      <p>
+        We take reasonable technical and organizational measures to protect your
+        data, including encrypted connections and access controls on our backend
+        infrastructure. No system is completely secure, and we cannot guarantee
+        absolute security.
+      </p>
+
+      <h2>10. Changes to This Policy</h2>
+      <p>
+        We may update this policy from time to time. Material changes will be
+        reflected by an updated &quot;Last updated&quot; date above.
+      </p>
+
+      <h2>11. Contact Us</h2>
+      <p>
+        Questions about this policy or your data can be sent to <Mail />.
+      </p>
+
+      <div className="note">
+        This document was drafted to reflect ShowBuz&apos;s actual features as of
+        August 2026, and is intended as a starting point to satisfy Apple&apos;s
+        TestFlight/App Store Connect requirement. It has not been reviewed by a
+        lawyer. Before wider release — and especially given the app stores
+        personal data about third parties (deps) — a legal review is strongly
+        recommended to confirm this is accurate, complete, and compliant with UK
+        GDPR and any other applicable law for your situation.
+      </div>
     </article>
   );
 }

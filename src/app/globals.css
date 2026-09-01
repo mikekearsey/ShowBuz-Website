@@ -60,3 +60,72 @@ body {
 .grain {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
 }
+
+.legal-doc {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  line-height: 1.6;
+  color: #1a1a1a;
+  background: #fff;
+}
+
+.legal-doc h1 {
+  font-size: 28px;
+  margin: 0 0 4px;
+  font-weight: 700;
+}
+
+.legal-doc h2 {
+  font-size: 20px;
+  margin-top: 36px;
+  margin-bottom: 0.75em;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 6px;
+  font-weight: 700;
+}
+
+.legal-doc p {
+  margin: 0 0 1em;
+}
+
+.legal-doc .meta {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 32px;
+}
+
+.legal-doc ul {
+  padding-left: 22px;
+  margin: 0 0 1em;
+}
+
+.legal-doc li {
+  margin-bottom: 6px;
+}
+
+.legal-doc .note {
+  background: #f0f4ff;
+  border-left: 4px solid #4a6fd4;
+  padding: 12px 16px;
+  margin: 20px 0;
+  font-size: 14px;
+}
+
+.legal-doc .important {
+  background: #fff0f0;
+  border-left: 4px solid #d44a4a;
+  padding: 12px 16px;
+  margin: 20px 0;
+}
+
+.legal-doc .important p:last-child {
+  margin-bottom: 0;
+}
+
+.legal-doc a {
+  color: #1a1a1a;
+  font-weight: 700;
+}
