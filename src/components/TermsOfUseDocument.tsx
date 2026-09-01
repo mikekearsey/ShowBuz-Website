@@ -195,17 +195,6 @@ export function TermsOfUseDocument() {
       <p>
         Questions about these Terms can be sent to <Mail />.
       </p>
-
-      <div className="note">
-        This document was drafted to reflect ShowBuz&apos;s actual features as of
-        August 2026, and is intended as a starting point to satisfy Apple&apos;s
-        TestFlight/App Store Connect requirements. It has not been reviewed by a
-        lawyer. A legal review is strongly recommended before wider release —
-        particularly given the App facilitates messaging to third parties and
-        displays schedule data sourced from external websites, both of which
-        carry real liability considerations worth a professional&apos;s
-        sign-off.
-      </div>
     </article>
   );
 }

@@ -233,16 +233,6 @@ export function PrivacyPolicyDocument() {
       <p>
         Questions about this policy or your data can be sent to <Mail />.
       </p>
-
-      <div className="note">
-        This document was drafted to reflect ShowBuz&apos;s actual features as of
-        August 2026, and is intended as a starting point to satisfy Apple&apos;s
-        TestFlight/App Store Connect requirement. It has not been reviewed by a
-        lawyer. Before wider release — and especially given the app stores
-        personal data about third parties (deps) — a legal review is strongly
-        recommended to confirm this is accurate, complete, and compliant with UK
-        GDPR and any other applicable law for your situation.
-      </div>
     </article>
   );
 }
