@@ -8,37 +8,42 @@ type Feature = {
 
 const chairFeatures: Feature[] = [
   {
-    title: "The published diary, not a copied PDF",
-    body: "Official listings load automatically into day, week, and month. Curtain times come from the official listing — you are no longer retyping a schedule into your diary.",
+    title: "No more typing the PDF",
+    body: "West End times drop into day, week and month. The diary is just there.",
     icon: CalendarIcon,
   },
   {
-    title: "Status instead of a buried thread",
-    body: "Each night shows Requested, Available, Confirmed, or Unavailable. You do not reconstruct who said yes from email, a call, or a WhatsApp scroll.",
+    title: "Who should I ask?",
+    body: "See who's covered for you, and when they last did it. Auto Book works down your list.",
     icon: StatusIcon,
   },
   {
-    title: "One ask, a trail you can follow",
-    body: "Select a dep or Auto Book the list. Multi-date asks live on the night. Auto reconfirm checks them on the morning of the show — you know they’re coming, without a chase.",
+    title: "One message, a run of dates",
+    body: "The app sends the WhatsApp. They tap yes in the app or on the message. It lands on the night, so you can see the week is in place.",
     icon: TrailIcon,
+  },
+  {
+    title: "Email yourself the week",
+    body: "Nights, who's confirmed, who's been paid. Save it or send it.",
+    icon: ExportIcon,
   },
 ];
 
 const depFeatures: Feature[] = [
   {
-    title: "Every ask in one diary",
-    body: "Cover requests land in Covers — not scattered across emails, calls, and WhatsApp threads with different chairs and no shared status.",
+    title: "All the requests in one place",
+    body: "Every chair, one list. You can see what's on.",
     icon: InviteIcon,
   },
   {
-    title: "Tap Available or Unavailable",
-    body: "No composing a reply. The chair is notified. The status is the record — not whether they saw the tick.",
+    title: "Don't fancy another app?",
+    body: "Stay on WhatsApp. Available and Unavailable still go through.",
     icon: TapIcon,
   },
   {
-    title: "Auto reconfirm on the morning of the show",
-    body: "Available is pencilled; confirmed is booked. Auto reconfirm does the morning check for you — the chair sees you’re coming. The night is not assumed.",
-    icon: ReconfirmIcon,
+    title: "You have your own show?",
+    body: "Same login. Same app.",
+    icon: DualIcon,
   },
 ];
 
@@ -48,20 +53,25 @@ export function FeatureGrid() {
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold tracking-widest text-buzz uppercase">
-            Built for the pit
+            Same app
           </p>
           <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
-            A trail for every booking.
+            Look at the night. Know it&apos;s in place. Then forget about it.
           </h2>
-          <p className="mt-4 text-muted text-pretty">
-            Designed by musicians, for musicians. The path from ask to confirmed
-            lives on the app — not buried in emails, phone calls, or WhatsApp
-            threads.
-          </p>
         </div>
         <div className="mt-14 grid gap-10 lg:grid-cols-2 lg:gap-8">
-          <FeatureColumn id="chairs" label="For chairs" features={chairFeatures} />
-          <FeatureColumn id="deps" label="For deps" features={depFeatures} />
+          <FeatureColumn
+            id="chairs"
+            label="For Chair-Holders"
+            features={chairFeatures}
+            footnote="Show morning, Auto reconfirm at nine — one tap, both shows. You know before you go. Stick a widget on your Home Screen, or put it in your calendar."
+          />
+          <FeatureColumn
+            id="deps"
+            label="For deps"
+            features={depFeatures}
+            footnote="Thanks and meetups stay on WhatsApp. This is just the diary."
+          />
         </div>
       </div>
     </section>
@@ -72,10 +82,12 @@ function FeatureColumn({
   id,
   label,
   features,
+  footnote,
 }: {
   id: string;
   label: string;
   features: Feature[];
+  footnote: string;
 }) {
   return (
     <div id={id} className="scroll-mt-24">
@@ -100,6 +112,7 @@ function FeatureColumn({
           </article>
         ))}
       </div>
+      <p className="mt-4 px-1 text-sm leading-relaxed text-muted">{footnote}</p>
     </div>
   );
 }
@@ -134,6 +147,26 @@ function TrailIcon() {
   );
 }
 
+function ExportIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M12 3v12M8 7l4-4 4 4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function InviteIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -156,17 +189,23 @@ function TapIcon() {
   );
 }
 
-function ReconfirmIcon() {
+function DualIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="16" cy="9" r="2.4" stroke="currentColor" strokeWidth="1.8" />
       <path
-        d="M20 12a8 8 0 1 1-2.2-5.5"
+        d="M4 19c.4-2.8 2.6-4.5 5-4.5s4.6 1.7 5 4.5"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
       />
-      <path d="M20 4v4h-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="m9 12 2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M14.5 14.8c1.6-.4 3.4.4 4.5 2.7"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

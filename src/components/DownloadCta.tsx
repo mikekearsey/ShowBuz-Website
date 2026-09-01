@@ -14,15 +14,18 @@ export function DownloadCta() {
             Get the app
           </p>
           <h2 className="relative mx-auto mt-3 max-w-2xl font-display text-3xl font-extrabold tracking-tight text-balance sm:text-5xl">
-            Put ShowBuz in your pocket.
+            Open the diary. See the show&apos;s covered.
           </h2>
           <p className="relative mx-auto mt-4 max-w-lg text-muted text-pretty">
-            Designed by musicians, for musicians. Every booking leaves a trail
-            — not a message buried in email, a phone call, or a WhatsApp thread.
+            Peace of mind at a glance.
           </p>
           <div className="relative mt-8 flex justify-center">
             <StoreButtons size="lg" />
           </div>
+          <p className="relative mx-auto mt-6 max-w-lg text-sm text-muted">
+            Need a hand?{" "}
+            <ContactEmail className="text-foreground underline decoration-white/35 underline-offset-4 hover:decoration-buzz" />
+          </p>
         </div>
       </div>
     </section>
@@ -38,6 +41,9 @@ export function Footer() {
           <p>© 2026 Mike Kearsey Limited</p>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+          <a href="/#how" className="hover:text-foreground">
+            How it works
+          </a>
           <a href="/#features" className="hover:text-foreground">
             Features
           </a>

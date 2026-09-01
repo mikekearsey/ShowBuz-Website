@@ -14,8 +14,14 @@ export function Header() {
           className="flex items-center gap-6 text-sm font-medium text-muted"
           aria-label="Primary"
         >
+          <a href="/#how" className="hidden transition hover:text-foreground sm:inline">
+            How it works
+          </a>
           <a href="/#features" className="hidden transition hover:text-foreground sm:inline">
             Features
+          </a>
+          <a href="/#faq" className="hidden transition hover:text-foreground lg:inline">
+            Questions
           </a>
           <a
             href="/#download"
