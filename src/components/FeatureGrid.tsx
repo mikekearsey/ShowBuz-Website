@@ -56,7 +56,7 @@ export function FeatureGrid() {
             Same app
           </p>
           <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
-            Look at the night. Know it&apos;s in place. Then forget about it.
+            Booked, backed up, and handled.
           </h2>
         </div>
         <div className="mt-14 grid gap-10 lg:grid-cols-2 lg:gap-8">
