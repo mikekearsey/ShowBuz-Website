@@ -42,9 +42,35 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en-GB"
-      className={`${outfit.variable} ${syne.variable} h-full antialiased`}
+      className={`${outfit.variable} ${syne.variable} antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `history.scrollRestoration="manual";
+(function(){
+  var html = document.documentElement;
+  var hash = location.hash;
+  if (hash === "#download" || hash === "#top") {
+    history.replaceState(null, "", location.pathname + location.search);
+    hash = "";
+  }
+  html.style.scrollBehavior = "auto";
+  function pin(){
+    if (!hash) scrollTo(0, 0);
+  }
+  pin();
+  addEventListener("DOMContentLoaded", pin);
+  addEventListener("pageshow", pin);
+  addEventListener("load", function(){
+    pin();
+    html.style.scrollBehavior = "";
+  });
+})();`,
+          }}
+        />
+      </head>
+      <body className="flex min-h-dvh flex-col bg-background font-sans text-foreground">
         {children}
       </body>
     </html>

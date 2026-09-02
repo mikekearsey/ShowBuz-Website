@@ -8,7 +8,7 @@ import { ProofStrip } from "@/components/ProofStrip";
 
 export default function Home() {
   return (
-    <div id="top" className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col">
       <Header />
       <main>
         <Hero />

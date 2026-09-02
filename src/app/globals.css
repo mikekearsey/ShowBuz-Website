@@ -20,6 +20,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-anchor: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
