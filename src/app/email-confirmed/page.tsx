@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
+import { Logo } from "@/components/Logo";
 
 const APP_CALLBACK = "depbookv3://auth/callback";
 
@@ -16,10 +17,8 @@ export default function EmailConfirmedPage() {
     <div className="flex flex-1 flex-col">
       <Header />
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-20 text-center">
-        <p className="font-display text-sm font-semibold tracking-[0.2em] text-buzz uppercase">
-          ShowBuz
-        </p>
-        <h1 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+        <Logo size={88} className="h-[88px] w-[88px]" priority />
+        <h1 className="mt-6 font-display text-3xl font-bold tracking-tight sm:text-4xl">
           Thank you
         </h1>
         <p className="mt-4 max-w-md text-lg leading-relaxed text-muted">
