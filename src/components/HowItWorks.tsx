@@ -1,7 +1,7 @@
 const steps = [
   {
     n: "1",
-    title: "The show's already in",
+    title: "The show's already in your diary",
     body: "Day, week, month. You don't copy the schedule by hand.",
   },
   {
@@ -17,7 +17,7 @@ const steps = [
   {
     n: "4",
     title: "Look at the night",
-    body: "Confirmed. Auto reconfirm at nine, one tap for both shows. You can see it's in place — then stop thinking about it.",
+    body: "Confirmed. Auto reconfirms at 9:00am on day of show, one tap for both shows. You can see it's in place — then stop thinking about it.",
   },
 ];
 

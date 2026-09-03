@@ -8,7 +8,7 @@ type Feature = {
 
 const chairFeatures: Feature[] = [
   {
-    title: "No more typing the PDF",
+    title: "No more typing the schedule into your diary",
     body: "West End times drop into day, week and month. The diary is just there.",
     icon: CalendarIcon,
   },
@@ -19,7 +19,7 @@ const chairFeatures: Feature[] = [
   },
   {
     title: "One message, a run of dates",
-    body: "The app sends the WhatsApp. They tap yes in the app or on the message. It lands on the night, so you can see the week is in place.",
+    body: "The app sends the request. They tap yes in the app or in the message. The response lands in the diary so you can see the show is in hand.",
     icon: TrailIcon,
   },
   {
@@ -64,13 +64,11 @@ export function FeatureGrid() {
             id="chairs"
             label="For Chair-Holders"
             features={chairFeatures}
-            footnote="Show morning, Auto reconfirm at nine — one tap, both shows. You know before you go. Stick a widget on your Home Screen, or put it in your calendar."
           />
           <FeatureColumn
             id="deps"
             label="For deps"
             features={depFeatures}
-            footnote="Thanks and meetups stay on WhatsApp. This is just the diary."
           />
         </div>
       </div>
@@ -82,12 +80,10 @@ function FeatureColumn({
   id,
   label,
   features,
-  footnote,
 }: {
   id: string;
   label: string;
   features: Feature[];
-  footnote: string;
 }) {
   return (
     <div id={id} className="scroll-mt-24">
@@ -112,7 +108,6 @@ function FeatureColumn({
           </article>
         ))}
       </div>
-      <p className="mt-4 px-1 text-sm leading-relaxed text-muted">{footnote}</p>
     </div>
   );
 }
