@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         destination: "/email-confirmed",
         permanent: false,
       },
+      {
+        source: "/auth/reset-password",
+        destination: "/reset-password",
+        permanent: false,
+      },
     ];
   },
 };
