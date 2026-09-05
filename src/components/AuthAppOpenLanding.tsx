@@ -34,10 +34,14 @@ export function AuthAppOpenLanding({
 
   useEffect(() => {
     setPrimaryHref(
-      showbuzAppHref(primaryIsRecovery ? { flow: "recovery" } : undefined),
+      showbuzAppHref(
+        primaryIsRecovery ? { flow: "recovery", type: "recovery" } : undefined,
+      ),
     );
     setSecondaryHref(
-      showbuzAppHref(secondaryIsRecovery ? { flow: "recovery" } : undefined),
+      showbuzAppHref(
+        secondaryIsRecovery ? { flow: "recovery", type: "recovery" } : undefined,
+      ),
     );
   }, [primaryIsRecovery, secondaryIsRecovery]);
 
