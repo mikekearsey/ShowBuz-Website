@@ -2,6 +2,7 @@ import Link from "next/link";
 import { logoutAction } from "@/app/admin/actions";
 import { ScrapeStatusDetail } from "@/components/admin/ScrapeStatusDetail";
 import {
+  catalogHasFutureDates,
   formatTouringVenueSummary,
   formatTouringVenueSummaryFromRuns,
   listAllVenueRuns,
@@ -9,11 +10,12 @@ import {
   listTouringVenueStats,
   parseScrapeFilter,
   type CatalogListingKind,
+  type CatalogProduction,
   type CatalogScrapeFilter,
   type CatalogVenueRun,
   type TouringVenueStats,
 } from "@/lib/admin/catalog";
-import { formatAdminDate } from "@/lib/admin/london";
+import { formatAdminDate, londonTodayYmd } from "@/lib/admin/london";
 
 const FILTERS: Array<{ id: CatalogScrapeFilter; label: string }> = [
   { id: "all", label: "All" },
@@ -22,6 +24,7 @@ const FILTERS: Array<{ id: CatalogScrapeFilter; label: string }> = [
   { id: "error", label: "Error" },
   { id: "pending", label: "Not scraped" },
   { id: "ignored", label: "Ignored" },
+  { id: "archived", label: "Archived" },
 ];
 
 const KIND_COPY: Record<
@@ -87,6 +90,22 @@ function venueSummaryForShow(
   );
 }
 
+function isArchivedShow(
+  show: CatalogProduction,
+  todayYmd: string,
+  runsByProduction: Map<string, CatalogVenueRun[]>,
+  statsByProduction: Map<string, TouringVenueStats>,
+): boolean {
+  if (show.scrape_status === "ignored") return false;
+  const runs = runsByProduction.get(show.id) ?? [];
+  const stats = statsByProduction.get(show.id);
+  return !catalogHasFutureDates(show, {
+    todayYmd,
+    venueRunEndDates: runs.map((run) => run.end_date),
+    performanceEndDate: stats?.endDate ?? null,
+  });
+}
+
 export async function CatalogShowsList({
   kind,
   status,
@@ -97,13 +116,13 @@ export async function CatalogShowsList({
   email: string;
 }) {
   const filter = parseScrapeFilter(status);
+  const todayYmd = londonTodayYmd();
   const productions = await listProductions();
   const kindShows = productions.filter((show) => show.listing_kind === kind);
   const [venueRuns, performanceStats] = await Promise.all([
     kind === "touring" ? listAllVenueRuns() : Promise.resolve([] as CatalogVenueRun[]),
-    kind === "touring"
-      ? listTouringVenueStats(kindShows.map((show) => show.id))
-      : Promise.resolve(new Map<string, TouringVenueStats>()),
+    // Need end dates for archive detection on both kinds when possible.
+    listTouringVenueStats(kindShows.map((show) => show.id)),
   ]);
   const runsByProduction = new Map<string, CatalogVenueRun[]>();
   for (const run of venueRuns) {
@@ -111,10 +130,21 @@ export async function CatalogShowsList({
     list.push(run);
     runsByProduction.set(run.production_id, list);
   }
+
+  const archivedShows = kindShows.filter((show) =>
+    isArchivedShow(show, todayYmd, runsByProduction, performanceStats),
+  );
+  const activeShows = kindShows.filter(
+    (show) => !isArchivedShow(show, todayYmd, runsByProduction, performanceStats),
+  );
+
   const visible =
-    filter === "all"
-      ? kindShows
-      : kindShows.filter((show) => show.scrape_status === filter);
+    filter === "archived"
+      ? archivedShows
+      : filter === "all"
+        ? activeShows
+        : activeShows.filter((show) => show.scrape_status === filter);
+
   const copy = KIND_COPY[kind];
   const basePath = kind === "resident" ? "/admin/resident" : "/admin/touring";
 
@@ -156,9 +186,11 @@ export async function CatalogShowsList({
         {FILTERS.map((item) => {
           const count =
             item.id === "all"
-              ? kindShows.length
-              : kindShows.filter((show) => show.scrape_status === item.id)
-                  .length;
+              ? activeShows.length
+              : item.id === "archived"
+                ? archivedShows.length
+                : activeShows.filter((show) => show.scrape_status === item.id)
+                    .length;
           const href =
             item.id === "all" ? basePath : `${basePath}?status=${item.id}`;
           const active = filter === item.id;
@@ -174,6 +206,13 @@ export async function CatalogShowsList({
           );
         })}
       </nav>
+
+      {filter === "archived" ? (
+        <p className="admin-footnote">
+          Shows with no nights on or after today. They return to the main list
+          automatically when a scrape adds future dates.
+        </p>
+      ) : null}
 
       <div className="admin-table-wrap">
         <table className="admin-table">
@@ -192,7 +231,14 @@ export async function CatalogShowsList({
                 <td>
                   <Link href={`/admin/shows/${show.id}`}>{show.name}</Link>
                 </td>
-                <td>{venueSummaryForShow(kind, show, runsByProduction, performanceStats)}</td>
+                <td>
+                  {venueSummaryForShow(
+                    kind,
+                    show,
+                    runsByProduction,
+                    performanceStats,
+                  )}
+                </td>
                 <td>{formatAdminDate(show.run_start_date)}</td>
                 <td>{formatAdminDate(show.run_end_date)}</td>
                 <td>
@@ -204,9 +250,16 @@ export async function CatalogShowsList({
         </table>
       </div>
       <p className="admin-footnote">
-        {visible.length} of {kindShows.length} {kind} shows
-        {filter === "all" ? "" : ` with status “${filter}”`}.{" "}
-        <Link href={copy.otherHref}>Switch to {copy.otherLabel}</Link>.
+        {visible.length} of{" "}
+        {filter === "archived" ? archivedShows.length : activeShows.length}{" "}
+        {filter === "archived" ? "archived" : "active"} {kind} shows
+        {filter === "all" || filter === "archived"
+          ? ""
+          : ` with status “${filter}”`}
+        {filter !== "archived" && archivedShows.length
+          ? ` · ${archivedShows.length} archived`
+          : ""}
+        . <Link href={copy.otherHref}>Switch to {copy.otherLabel}</Link>.
       </p>
     </main>
   );

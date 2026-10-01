@@ -39,6 +39,10 @@ export function formatLondonTime(iso: string): string {
   }).format(new Date(iso));
 }
 
+export function londonTodayYmd(): string {
+  return londonYmd(new Date().toISOString());
+}
+
 export function londonYmd(iso: string): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: LONDON_TZ,

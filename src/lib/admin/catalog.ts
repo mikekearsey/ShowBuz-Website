@@ -37,7 +37,8 @@ export type CatalogScrapeFilter =
   | "empty"
   | "error"
   | "pending"
-  | "ignored";
+  | "ignored"
+  | "archived";
 
 export function scrapeStatusLabel(
   production: Pick<CatalogProduction, "scrape_status" | "listing_kind">,
@@ -59,11 +60,37 @@ export function parseScrapeFilter(value: string | undefined): CatalogScrapeFilte
     value === "empty" ||
     value === "error" ||
     value === "pending" ||
-    value === "ignored"
+    value === "ignored" ||
+    value === "archived"
   ) {
     return value;
   }
   return "all";
+}
+
+/** True when the catalog still has a published night (or run end) on/after today. */
+export function catalogHasFutureDates(
+  production: Pick<CatalogProduction, "run_end_date">,
+  opts?: {
+    todayYmd?: string;
+    venueRunEndDates?: string[];
+    performanceEndDate?: string | null;
+  },
+): boolean {
+  const today =
+    opts?.todayYmd ??
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: LONDON_TZ,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+  const candidates = [
+    production.run_end_date,
+    opts?.performanceEndDate ?? null,
+    ...(opts?.venueRunEndDates ?? []),
+  ].filter((value): value is string => Boolean(value && /^\d{4}-\d{2}-\d{2}/.test(value)));
+  return candidates.some((ymd) => ymd.slice(0, 10) >= today);
 }
 
 export type CatalogPerformance = {
