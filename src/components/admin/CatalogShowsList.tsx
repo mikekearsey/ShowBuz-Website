@@ -3,12 +3,15 @@ import { logoutAction } from "@/app/admin/actions";
 import { ScrapeStatusDetail } from "@/components/admin/ScrapeStatusDetail";
 import {
   formatTouringVenueSummary,
+  formatTouringVenueSummaryFromRuns,
   listAllVenueRuns,
   listProductions,
+  listTouringVenueStats,
   parseScrapeFilter,
   type CatalogListingKind,
   type CatalogScrapeFilter,
   type CatalogVenueRun,
+  type TouringVenueStats,
 } from "@/lib/admin/catalog";
 import { formatAdminDate } from "@/lib/admin/london";
 
@@ -48,21 +51,40 @@ function venueSummaryForShow(
     run_end_date: string | null;
   },
   runsByProduction: Map<string, CatalogVenueRun[]>,
+  statsByProduction: Map<string, TouringVenueStats>,
 ): string {
   if (kind !== "touring") {
     return show.venue_summary ?? "—";
   }
   const runs = runsByProduction.get(show.id) ?? [];
-  const label = formatTouringVenueSummary(runs, {
-    start: show.run_start_date,
-    end: show.run_end_date,
-  });
-  // Prefer live itinerary count. Ignore legacy single-theatre venue_summary.
-  if (label) return label;
+  if (runs.length > 0) {
+    return (
+      formatTouringVenueSummaryFromRuns(runs, {
+        start: show.run_start_date,
+        end: show.run_end_date,
+      }) ?? "—"
+    );
+  }
+  const stats = statsByProduction.get(show.id);
+  if (stats && stats.venueCount > 0) {
+    return (
+      formatTouringVenueSummary({
+        venueCount: stats.venueCount,
+        startDate: stats.startDate ?? show.run_start_date,
+        endDate: stats.endDate ?? show.run_end_date,
+      }) ?? "—"
+    );
+  }
   if (show.venue_summary && /\d+\s+venues?\s+over\s+\d+\s+months?/i.test(show.venue_summary)) {
     return show.venue_summary;
   }
-  return "—";
+  return (
+    formatTouringVenueSummary({
+      venueCount: 0,
+      startDate: show.run_start_date,
+      endDate: show.run_end_date,
+    }) ?? "—"
+  );
 }
 
 export async function CatalogShowsList({
@@ -75,11 +97,14 @@ export async function CatalogShowsList({
   email: string;
 }) {
   const filter = parseScrapeFilter(status);
-  const [productions, venueRuns] = await Promise.all([
-    listProductions(),
-    kind === "touring" ? listAllVenueRuns() : Promise.resolve([] as CatalogVenueRun[]),
-  ]);
+  const productions = await listProductions();
   const kindShows = productions.filter((show) => show.listing_kind === kind);
+  const [venueRuns, performanceStats] = await Promise.all([
+    kind === "touring" ? listAllVenueRuns() : Promise.resolve([] as CatalogVenueRun[]),
+    kind === "touring"
+      ? listTouringVenueStats(kindShows.map((show) => show.id))
+      : Promise.resolve(new Map<string, TouringVenueStats>()),
+  ]);
   const runsByProduction = new Map<string, CatalogVenueRun[]>();
   for (const run of venueRuns) {
     const list = runsByProduction.get(run.production_id) ?? [];
@@ -167,7 +192,7 @@ export async function CatalogShowsList({
                 <td>
                   <Link href={`/admin/shows/${show.id}`}>{show.name}</Link>
                 </td>
-                <td>{venueSummaryForShow(kind, show, runsByProduction)}</td>
+                <td>{venueSummaryForShow(kind, show, runsByProduction, performanceStats)}</td>
                 <td>{formatAdminDate(show.run_start_date)}</td>
                 <td>{formatAdminDate(show.run_end_date)}</td>
                 <td>

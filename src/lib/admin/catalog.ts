@@ -100,27 +100,111 @@ export function monthSpanInclusive(startDate: string, endDate: string): number {
 }
 
 /** Touring list cell — never a single theatre name. Example: "12 venues over 6 months". */
-export function formatTouringVenueSummary(
+export function formatTouringVenueSummary(input: {
+  venueCount: number;
+  startDate: string | null;
+  endDate: string | null;
+}): string | null {
+  const venues = input.venueCount;
+  if (venues <= 0) {
+    if (input.startDate && input.endDate) {
+      const months = monthSpanInclusive(input.startDate, input.endDate);
+      const monthWord = months === 1 ? "month" : "months";
+      return `Tour dates over ${months} ${monthWord}`;
+    }
+    return null;
+  }
+  const months =
+    input.startDate && input.endDate
+      ? monthSpanInclusive(input.startDate, input.endDate)
+      : 1;
+  const venueWord = venues === 1 ? "venue" : "venues";
+  const monthWord = months === 1 ? "month" : "months";
+  return `${venues} ${venueWord} over ${months} ${monthWord}`;
+}
+
+export function formatTouringVenueSummaryFromRuns(
   runs: Array<Pick<CatalogVenueRun, "start_date" | "end_date">>,
   fallback?: { start: string | null; end: string | null },
 ): string | null {
   if (runs.length > 0) {
     const starts = runs.map((r) => r.start_date).filter(Boolean).sort();
     const ends = runs.map((r) => r.end_date).filter(Boolean).sort();
-    const first = starts[0];
-    const last = ends[ends.length - 1];
-    const months = first && last ? monthSpanInclusive(first, last) : 1;
-    const venues = runs.length;
-    const venueWord = venues === 1 ? "venue" : "venues";
-    const monthWord = months === 1 ? "month" : "months";
-    return `${venues} ${venueWord} over ${months} ${monthWord}`;
+    return formatTouringVenueSummary({
+      venueCount: runs.length,
+      startDate: starts[0] ?? null,
+      endDate: ends[ends.length - 1] ?? null,
+    });
   }
-  if (fallback?.start && fallback?.end) {
-    const months = monthSpanInclusive(fallback.start, fallback.end);
-    const monthWord = months === 1 ? "month" : "months";
-    return `Tour dates over ${months} ${monthWord}`;
+  return formatTouringVenueSummary({
+    venueCount: 0,
+    startDate: fallback?.start ?? null,
+    endDate: fallback?.end ?? null,
+  });
+}
+
+export type TouringVenueStats = {
+  productionId: string;
+  venueCount: number;
+  startDate: string | null;
+  endDate: string | null;
+};
+
+function venueKey(venueName: string | null | undefined, venueCity: string | null | undefined): string {
+  const venue = (venueName ?? "").trim().toLowerCase();
+  const city = (venueCity ?? "").trim().toLowerCase();
+  return `${venue}|${city}`;
+}
+
+/** Build stand list from published curtains when catalog_venue_runs is empty. */
+export function venueRunsFromPerformances(
+  productionId: string,
+  performances: CatalogPerformance[],
+): CatalogVenueRun[] {
+  type Acc = {
+    city: string | null;
+    venue_name: string;
+    start_date: string;
+    end_date: string;
+  };
+  const byKey = new Map<string, Acc>();
+  for (const row of performances) {
+    if (row.source === ADMIN_SUPPRESSED_SOURCE) continue;
+    const name = (row.venue_name ?? "").trim();
+    if (!name) continue;
+    const ymd = new Intl.DateTimeFormat("en-CA", {
+      timeZone: LONDON_TZ,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(row.starts_at));
+    const key = venueKey(name, row.venue_city);
+    const existing = byKey.get(key);
+    if (!existing) {
+      byKey.set(key, {
+        city: row.venue_city?.trim() || null,
+        venue_name: name,
+        start_date: ymd,
+        end_date: ymd,
+      });
+      continue;
+    }
+    if (ymd < existing.start_date) existing.start_date = ymd;
+    if (ymd > existing.end_date) existing.end_date = ymd;
   }
-  return null;
+  return [...byKey.values()]
+    .sort((a, b) => a.start_date.localeCompare(b.start_date) || a.venue_name.localeCompare(b.venue_name))
+    .map((run, index) => ({
+      id: `perf:${productionId}:${venueKey(run.venue_name, run.city)}`,
+      production_id: productionId,
+      city: run.city,
+      venue_name: run.venue_name,
+      start_date: run.start_date,
+      end_date: run.end_date,
+      ticket_url: null,
+      source: "catalog_performances",
+      sort_index: index,
+    }));
 }
 
 export function venueRunTitle(run: Pick<CatalogVenueRun, "city" | "venue_name">): string {
@@ -394,6 +478,69 @@ export async function listAllVenueRuns(): Promise<CatalogVenueRun[]> {
     `catalog_venue_runs?select=id,production_id,city,venue_name,start_date,end_date,ticket_url,source,sort_index&order=start_date.asc&limit=20000`,
   );
 }
+
+
+/** Distinct touring venues per production from published curtains (fallback when MOT runs missing). */
+export async function listTouringVenueStats(
+  productionIds: string[],
+): Promise<Map<string, TouringVenueStats>> {
+  const stats = new Map<string, TouringVenueStats>();
+  for (const id of productionIds) {
+    stats.set(id, { productionId: id, venueCount: 0, startDate: null, endDate: null });
+  }
+  if (productionIds.length === 0) return stats;
+
+  // Chunk IN filters — PostgREST URL length limits.
+  const chunkSize = 40;
+  for (let i = 0; i < productionIds.length; i += chunkSize) {
+    const chunk = productionIds.slice(i, i + chunkSize);
+    const filter = chunk.map(encodeURIComponent).join(",");
+    const rows = await rest<
+      Array<{
+        production_id: string;
+        venue_name: string | null;
+        venue_city: string | null;
+        starts_at: string;
+        source: string;
+      }>
+    >(
+      `catalog_performances?production_id=in.(${filter})&select=production_id,venue_name,venue_city,starts_at,source&limit=50000`,
+    );
+    const venuesByProd = new Map<string, Set<string>>();
+    for (const row of rows) {
+      if (row.source === ADMIN_SUPPRESSED_SOURCE) continue;
+      const name = (row.venue_name ?? "").trim();
+      if (!name) continue;
+      const set = venuesByProd.get(row.production_id) ?? new Set<string>();
+      set.add(venueKey(name, row.venue_city));
+      venuesByProd.set(row.production_id, set);
+
+      const ymd = new Intl.DateTimeFormat("en-CA", {
+        timeZone: LONDON_TZ,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date(row.starts_at));
+      const current = stats.get(row.production_id) ?? {
+        productionId: row.production_id,
+        venueCount: 0,
+        startDate: null,
+        endDate: null,
+      };
+      if (!current.startDate || ymd < current.startDate) current.startDate = ymd;
+      if (!current.endDate || ymd > current.endDate) current.endDate = ymd;
+      stats.set(row.production_id, current);
+    }
+    for (const [id, set] of venuesByProd) {
+      const current = stats.get(id);
+      if (!current) continue;
+      current.venueCount = set.size;
+      stats.set(id, current);
+    }
+  }
+  return stats;
+}
+
 
 export async function refreshProduction(production: CatalogProduction): Promise<unknown> {
   const key = serviceKey();

@@ -10,7 +10,7 @@ import {
 } from "../../actions";
 import { RefreshScrapeDialog } from "@/components/admin/RefreshScrapeDialog";
 import {
-  formatTouringVenueSummary,
+  formatTouringVenueSummaryFromRuns,
   getProduction,
   isAdminLocked,
   isSuppressed,
@@ -18,6 +18,7 @@ import {
   listVenueRuns,
   scrapeStatusLabel,
   venueRunTitle,
+  venueRunsFromPerformances,
   type CatalogPerformance,
   type CatalogVenueRun,
 } from "@/lib/admin/catalog";
@@ -111,15 +112,21 @@ export default async function AdminShowPage({
   const production = await getProduction(id);
   if (!production) notFound();
 
-  const [performances, venueRuns] = await Promise.all([
+  const [performances, storedVenueRuns] = await Promise.all([
     listPerformances(id),
     production.listing_kind === "touring" ? listVenueRuns(id) : Promise.resolve([] as CatalogVenueRun[]),
   ]);
   const visible = performances.filter((row) => !isSuppressed(row));
   const suppressed = performances.filter((row) => isSuppressed(row));
   const touring = production.listing_kind === "touring";
+  const venueRuns =
+    storedVenueRuns.length > 0
+      ? storedVenueRuns
+      : touring
+        ? venueRunsFromPerformances(id, performances)
+        : [];
   const touringSummary = touring
-    ? formatTouringVenueSummary(venueRuns, {
+    ? formatTouringVenueSummaryFromRuns(venueRuns, {
         start: production.run_start_date,
         end: production.run_end_date,
       })
