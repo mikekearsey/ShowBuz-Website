@@ -598,16 +598,18 @@ body {
   color: #fff;
 }
 
-.admin-scrape-trigger {
+.admin-app button.admin-scrape-trigger {
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
   padding: 0;
   border: 0;
+  border-radius: 0;
   background: transparent;
   color: inherit;
   font: inherit;
+  font-weight: 400;
   text-align: left;
   cursor: pointer;
 }
