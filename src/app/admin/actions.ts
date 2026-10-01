@@ -1,3 +1,5 @@
+"use server";
+
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
@@ -9,6 +11,7 @@ import {
   restoreCurtain,
   signInWithPassword,
   suppressCurtain,
+  type RefreshShowResult,
 } from "@/lib/admin/catalog";
 import { adminCookieName, createAdminToken, isAllowedAdminEmail } from "@/lib/admin/session";
 
@@ -19,7 +22,6 @@ async function requireConfiguredAdmin(email: string) {
 }
 
 export async function loginAction(formData: FormData) {
-  "use server";
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   if (!email || !password) {
@@ -44,14 +46,12 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function logoutAction() {
-  "use server";
   const jar = await cookies();
   jar.delete(adminCookieName);
   redirect("/admin/login");
 }
 
 export async function refreshShowAction(formData: FormData) {
-  "use server";
   const id = String(formData.get("productionId") ?? "");
   const production = await getProduction(id);
   if (!production) redirect("/admin");
@@ -64,7 +64,6 @@ export async function refreshShowAction(formData: FormData) {
 }
 
 export async function addCurtainAction(formData: FormData) {
-  "use server";
   const productionId = String(formData.get("productionId") ?? "");
   const date = String(formData.get("date") ?? "");
   const time = String(formData.get("time") ?? "");
@@ -90,7 +89,6 @@ export async function addCurtainAction(formData: FormData) {
 }
 
 export async function deleteCurtainAction(formData: FormData) {
-  "use server";
   const productionId = String(formData.get("productionId") ?? "");
   const curtainId = String(formData.get("curtainId") ?? "");
   if (!productionId || !curtainId) {
@@ -105,7 +103,6 @@ export async function deleteCurtainAction(formData: FormData) {
 }
 
 export async function restoreCurtainAction(formData: FormData) {
-  "use server";
   const productionId = String(formData.get("productionId") ?? "");
   const curtainId = String(formData.get("curtainId") ?? "");
   if (!productionId || !curtainId) {
@@ -120,7 +117,6 @@ export async function restoreCurtainAction(formData: FormData) {
 }
 
 export async function confirmMonthAction(formData: FormData) {
-  "use server";
   const productionId = String(formData.get("productionId") ?? "");
   const yearMonth = String(formData.get("yearMonth") ?? "");
   if (!productionId || !/^\d{4}-\d{2}$/.test(yearMonth)) {
@@ -135,21 +131,9 @@ export async function confirmMonthAction(formData: FormData) {
   redirect(`/admin/shows/${productionId}?month=${yearMonth}&ok=confirm`);
 }
 
-export type RefreshShowResult = {
-  ok: boolean;
-  error?: string;
-  nights?: number;
-  scrapeStatus?: string;
-  scrapeError?: string | null;
-  fromCache?: boolean;
-  sourceProvider?: string | null;
-  venueRuns?: number;
-};
-
 export async function refreshShowWithProgress(
   productionId: string,
 ): Promise<RefreshShowResult> {
-  "use server";
   const production = await getProduction(productionId);
   if (!production) return { ok: false, error: "Show not found." };
   try {

@@ -20,6 +20,17 @@ export type CatalogProduction = {
   source_provider: string | null;
 };
 
+export type RefreshShowResult = {
+  ok: boolean;
+  error?: string;
+  nights?: number;
+  scrapeStatus?: string;
+  scrapeError?: string | null;
+  fromCache?: boolean;
+  sourceProvider?: string | null;
+  venueRuns?: number;
+};
+
 export type CatalogScrapeFilter =
   | "all"
   | "ok"

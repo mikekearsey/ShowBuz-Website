@@ -2,11 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
-import {
-  refreshShowWithProgress,
-  type RefreshShowResult,
-} from "@/app/admin/actions";
-import type { CatalogListingKind } from "@/lib/admin/catalog";
+import { refreshShowWithProgress } from "@/app/admin/actions";
+import type { CatalogListingKind, RefreshShowResult } from "@/lib/admin/catalog";
 
 type Step = { id: string; label: string; detail: string };
 
