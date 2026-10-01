@@ -76,6 +76,65 @@ export type CatalogPerformance = {
   source: string;
 };
 
+export type CatalogVenueRun = {
+  id: string;
+  production_id: string;
+  city: string | null;
+  venue_name: string;
+  start_date: string;
+  end_date: string;
+  ticket_url: string | null;
+  source: string;
+  sort_index: number;
+};
+
+/** Inclusive calendar-month span between two YYYY-MM-DD dates. */
+export function monthSpanInclusive(startDate: string, endDate: string): number {
+  const a = new Date(`${startDate}T12:00:00Z`);
+  const b = new Date(`${endDate}T12:00:00Z`);
+  if (!Number.isFinite(a.getTime()) || !Number.isFinite(b.getTime())) return 1;
+  return Math.max(
+    1,
+    (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + (b.getUTCMonth() - a.getUTCMonth()) + 1,
+  );
+}
+
+/** Touring list cell — never a single theatre name. Example: "12 venues over 6 months". */
+export function formatTouringVenueSummary(
+  runs: Array<Pick<CatalogVenueRun, "start_date" | "end_date">>,
+  fallback?: { start: string | null; end: string | null },
+): string | null {
+  if (runs.length > 0) {
+    const starts = runs.map((r) => r.start_date).filter(Boolean).sort();
+    const ends = runs.map((r) => r.end_date).filter(Boolean).sort();
+    const first = starts[0];
+    const last = ends[ends.length - 1];
+    const months = first && last ? monthSpanInclusive(first, last) : 1;
+    const venues = runs.length;
+    const venueWord = venues === 1 ? "venue" : "venues";
+    const monthWord = months === 1 ? "month" : "months";
+    return `${venues} ${venueWord} over ${months} ${monthWord}`;
+  }
+  if (fallback?.start && fallback?.end) {
+    const months = monthSpanInclusive(fallback.start, fallback.end);
+    const monthWord = months === 1 ? "month" : "months";
+    return `Tour dates over ${months} ${monthWord}`;
+  }
+  return null;
+}
+
+export function venueRunTitle(run: Pick<CatalogVenueRun, "city" | "venue_name">): string {
+  const venue = (run.venue_name ?? "").trim();
+  const city = (run.city ?? "").trim();
+  if (!city) return venue || "Venue";
+  if (!venue) return city;
+  const foldedVenue = venue.toLowerCase();
+  const foldedCity = city.toLowerCase();
+  if (foldedVenue.includes(foldedCity)) return venue;
+  return `${venue}, ${city}`;
+}
+
+
 function supabaseUrl(): string {
   return (
     process.env.SUPABASE_URL ??
@@ -318,6 +377,22 @@ export async function confirmCatalogMonth(
     },
   );
   return { lockedCurtains: inMonth.length };
+}
+
+
+export async function listVenueRuns(
+  productionId: string,
+): Promise<CatalogVenueRun[]> {
+  return rest<CatalogVenueRun[]>(
+    `catalog_venue_runs?production_id=eq.${encodeURIComponent(productionId)}&select=id,production_id,city,venue_name,start_date,end_date,ticket_url,source,sort_index&order=start_date.asc&limit=500`,
+  );
+}
+
+/** All touring stands — used to render count summaries on the catalog list. */
+export async function listAllVenueRuns(): Promise<CatalogVenueRun[]> {
+  return rest<CatalogVenueRun[]>(
+    `catalog_venue_runs?select=id,production_id,city,venue_name,start_date,end_date,ticket_url,source,sort_index&order=start_date.asc&limit=20000`,
+  );
 }
 
 export async function refreshProduction(production: CatalogProduction): Promise<unknown> {

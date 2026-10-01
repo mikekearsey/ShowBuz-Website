@@ -10,12 +10,16 @@ import {
 } from "../../actions";
 import { RefreshScrapeDialog } from "@/components/admin/RefreshScrapeDialog";
 import {
+  formatTouringVenueSummary,
   getProduction,
   isAdminLocked,
   isSuppressed,
   listPerformances,
+  listVenueRuns,
   scrapeStatusLabel,
+  venueRunTitle,
   type CatalogPerformance,
+  type CatalogVenueRun,
 } from "@/lib/admin/catalog";
 import { formatAdminDate, formatAdminDateTime, formatLondonTime, londonYmd, londonYearMonth } from "@/lib/admin/london";
 import { adminCookieName, readAdminEmail } from "@/lib/admin/session";
@@ -86,12 +90,17 @@ function errorNotice(value: string | undefined): string | null {
   }
 }
 
+function standMonthHref(productionId: string, run: CatalogVenueRun): string {
+  const month = run.start_date.slice(0, 7);
+  return `/admin/shows/${productionId}?month=${month}&venue=${encodeURIComponent(run.id)}`;
+}
+
 export default async function AdminShowPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ month?: string; ok?: string; error?: string }>;
+  searchParams: Promise<{ month?: string; venue?: string; ok?: string; error?: string }>;
 }) {
   const jar = await cookies();
   const email = await readAdminEmail(jar.get(adminCookieName)?.value);
@@ -102,16 +111,32 @@ export default async function AdminShowPage({
   const production = await getProduction(id);
   if (!production) notFound();
 
-  const performances = await listPerformances(id);
+  const [performances, venueRuns] = await Promise.all([
+    listPerformances(id),
+    production.listing_kind === "touring" ? listVenueRuns(id) : Promise.resolve([] as CatalogVenueRun[]),
+  ]);
   const visible = performances.filter((row) => !isSuppressed(row));
   const suppressed = performances.filter((row) => isSuppressed(row));
   const touring = production.listing_kind === "touring";
+  const touringSummary = touring
+    ? formatTouringVenueSummary(venueRuns, {
+        start: production.run_start_date,
+        end: production.run_end_date,
+      })
+    : null;
+
+  const selectedVenue =
+    touring && query.venue
+      ? venueRuns.find((run) => run.id === query.venue) ?? null
+      : null;
 
   const fallback =
-    visible[0]?.starts_at ??
-    (production.run_start_date
-      ? `${production.run_start_date}T12:00:00Z`
-      : new Date().toISOString());
+    selectedVenue?.start_date
+      ? `${selectedVenue.start_date}T12:00:00Z`
+      : visible[0]?.starts_at ??
+        (production.run_start_date
+          ? `${production.run_start_date}T12:00:00Z`
+          : new Date().toISOString());
   const fallbackYm = londonYearMonth(fallback);
   let year = fallbackYm.year;
   let month = fallbackYm.month;
@@ -134,25 +159,31 @@ export default async function AdminShowPage({
   const yearMonth = `${year}-${String(month).padStart(2, "0")}`;
   const monthConfirmed = (production.admin_locked_months ?? []).includes(yearMonth);
   const finish = production.run_end_date;
+  const showCalendar = !touring || Boolean(query.month) || venueRuns.length === 0;
 
   return (
-    <main>
+    <main className={showCalendar ? "admin-show-calendar-page" : undefined}>
       <header className="admin-top">
         <div>
           <p className="admin-kicker">
-            <Link href={production.listing_kind === "touring" ? "/admin/touring" : "/admin/resident"}>
-              {production.listing_kind === "touring" ? "Touring shows" : "Resident shows"}
+            <Link href={touring ? "/admin/touring" : "/admin/resident"}>
+              {touring ? "Touring shows" : "Resident shows"}
             </Link>
             {" / "}
             Show
           </p>
           <h1>{production.name}</h1>
           <p className="admin-lead">
-            {production.venue_summary ? `${production.venue_summary}. ` : null}
+            {touring
+              ? touringSummary
+                ? `${touringSummary}. `
+                : null
+              : production.venue_summary
+                ? `${production.venue_summary}. `
+                : null}
             Catalog run {formatAdminDate(production.run_start_date)} to{" "}
             {formatAdminDate(production.run_end_date)}.{" "}
-            {production.listing_kind === "touring" &&
-            production.scrape_status === "empty"
+            {touring && production.scrape_status === "empty"
               ? "No published tour dates"
               : `Scrape ${scrapeStatusLabel(production)}`}
             {production.last_scraped_at
@@ -182,147 +213,216 @@ export default async function AdminShowPage({
         </p>
       ) : null}
 
-      <section className="admin-toolbar">
-        <div className="admin-toolbar-actions">
-          <RefreshScrapeDialog
-            productionId={production.id}
-            listingKind={production.listing_kind}
-            showName={production.name}
-          />
-          <form action={confirmMonthAction}>
-            <input type="hidden" name="productionId" value={production.id} />
-            <input type="hidden" name="yearMonth" value={yearMonth} />
-            <button type="submit" className="admin-ghost" disabled={monthConfirmed}>
-              {monthConfirmed
-                ? "This month confirmed"
-                : "Confirm this month is correct"}
-            </button>
-          </form>
-        </div>
-        <p>
-          Refresh looks up newly published nights. Confirm locks only the month
-          you are viewing — later months can still gain dates if the run
-          extends. Nights you add or remove here stay as you set them.
-        </p>
-      </section>
-
-      <nav className="admin-month-nav">
-        <Link href={`/admin/shows/${id}?month=${prev.year}-${String(prev.month).padStart(2, "0")}`}>
-          Previous
-        </Link>
-        <h2>{monthLabel(year, month)}</h2>
-        <Link href={`/admin/shows/${id}?month=${next.year}-${String(next.month).padStart(2, "0")}`}>
-          Next
-        </Link>
-      </nav>
-      <p className="admin-footnote">
-        {monthConfirmed
-          ? `Showing ${monthLabel(year, month)} — confirmed. Scrapes will not change this month. `
-          : `Showing ${monthLabel(year, month)}. `}
-        {finish ? `Run continues until ${formatAdminDate(finish)}. ` : ""}
-        {visible.length} published curtains in the catalog
-        {suppressed.length ? `, ${suppressed.length} removed and locked` : ""}.
-      </p>
-
-      <div className={`admin-cal${monthConfirmed ? " confirmed" : ""}`}>
-        {WEEKDAYS.map((label) => (
-          <div key={label} className="admin-cal-head">
-            {label}
+      {touring && venueRuns.length > 0 ? (
+        <section className="admin-itinerary">
+          <div className="admin-itinerary-head">
+            <h2>Venues</h2>
+            {showCalendar ? (
+              <Link href={`/admin/shows/${id}`} className="admin-ghost">
+                All venues
+              </Link>
+            ) : null}
           </div>
-        ))}
-        {cells.map((cell, index) => {
-          const curtains = cell.ymd ? (byDay.get(cell.ymd) ?? []) : [];
-          return (
-            <div
-              key={`${cell.ymd ?? "empty"}-${index}`}
-              className={`admin-cal-day${cell.day ? "" : " empty"}`}
-            >
-              {cell.day ? <span className="admin-cal-num">{cell.day}</span> : null}
-              {curtains.map((curtain) => (
-                <div
-                  key={curtain.id}
-                  className={`admin-curtain${isAdminLocked(curtain) ? " locked" : ""}`}
-                >
-                  <span className="admin-curtain-time">
-                    {formatLondonTime(curtain.starts_at)}
-                  </span>
-                  {touring || curtain.venue_name ? (
-                    <span className="admin-curtain-venue">
-                      {curtain.venue_name}
-                      {curtain.venue_city ? `, ${curtain.venue_city}` : ""}
+          <p className="admin-footnote">
+            {touringSummary ?? "Tour itinerary"}. Select a stand to open that
+            month&apos;s calendar.
+          </p>
+          <ul className="admin-itinerary-list">
+            {venueRuns.map((run) => {
+              const active = selectedVenue?.id === run.id;
+              return (
+                <li key={run.id}>
+                  <Link
+                    href={standMonthHref(production.id, run)}
+                    className={active ? "admin-itinerary-row active" : "admin-itinerary-row"}
+                  >
+                    <span className="admin-itinerary-venue">{venueRunTitle(run)}</span>
+                    <span className="admin-itinerary-dates">
+                      {formatAdminDate(run.start_date)} – {formatAdminDate(run.end_date)}
                     </span>
-                  ) : null}
-                  <form action={deleteCurtainAction}>
-                    <input type="hidden" name="productionId" value={production.id} />
-                    <input type="hidden" name="curtainId" value={curtain.id} />
-                    <button type="submit" className="admin-tiny">
-                      Remove
-                    </button>
-                  </form>
-                </div>
-              ))}
-            </div>
-          );
-        })}
-      </div>
-
-      <section className="admin-add">
-        <h2>Add a curtain</h2>
-        <p>
-          Saved as definite. A later refresh will not delete it. Times are
-          Europe/London.
-        </p>
-        <form action={addCurtainAction} className="admin-form row">
-          <input type="hidden" name="productionId" value={production.id} />
-          <label>
-            Date
-            <input type="date" name="date" required />
-          </label>
-          <label>
-            Time
-            <input type="time" name="time" required />
-          </label>
-          <label>
-            Venue{touring ? "" : " (optional)"}
-            <input
-              type="text"
-              name="venueName"
-              required={touring}
-              defaultValue={touring ? "" : (production.venue_summary ?? "")}
-            />
-          </label>
-          <label>
-            City
-            <input type="text" name="venueCity" />
-          </label>
-          <label className="wide">
-            Address
-            <input type="text" name="venueAddress" />
-          </label>
-          <button type="submit">Add curtain</button>
-        </form>
-      </section>
-
-      {suppressed.length > 0 ? (
-        <section className="admin-removed">
-          <h2>Removed, locked against refresh</h2>
-          <ul>
-            {suppressed.map((curtain) => (
-              <li key={curtain.id}>
-                {formatAdminDate(londonYmd(curtain.starts_at))} {formatLondonTime(curtain.starts_at)}
-                {curtain.venue_name ? ` · ${curtain.venue_name}` : ""}
-                <form action={restoreCurtainAction}>
-                  <input type="hidden" name="productionId" value={production.id} />
-                  <input type="hidden" name="curtainId" value={curtain.id} />
-                  <button type="submit" className="admin-tiny">
-                    Restore
-                  </button>
-                </form>
-              </li>
-            ))}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : null}
+
+      {showCalendar ? (
+        <>
+          <section className="admin-toolbar">
+            <div className="admin-toolbar-actions">
+              <RefreshScrapeDialog
+                productionId={production.id}
+                listingKind={production.listing_kind}
+                showName={production.name}
+              />
+              <form action={confirmMonthAction}>
+                <input type="hidden" name="productionId" value={production.id} />
+                <input type="hidden" name="yearMonth" value={yearMonth} />
+                <button type="submit" className="admin-ghost" disabled={monthConfirmed}>
+                  {monthConfirmed
+                    ? "This month confirmed"
+                    : "Confirm this month is correct"}
+                </button>
+              </form>
+            </div>
+            <p>
+              Refresh looks up newly published nights. Confirm locks only the month
+              you are viewing — later months can still gain dates if the run
+              extends. Nights you add or remove here stay as you set them.
+            </p>
+          </section>
+
+          <nav className="admin-month-nav">
+            <Link
+              href={`/admin/shows/${id}?month=${prev.year}-${String(prev.month).padStart(2, "0")}${
+                selectedVenue ? `&venue=${encodeURIComponent(selectedVenue.id)}` : ""
+              }`}
+            >
+              Previous
+            </Link>
+            <h2>
+              {monthLabel(year, month)}
+              {selectedVenue ? ` · ${venueRunTitle(selectedVenue)}` : ""}
+            </h2>
+            <Link
+              href={`/admin/shows/${id}?month=${next.year}-${String(next.month).padStart(2, "0")}${
+                selectedVenue ? `&venue=${encodeURIComponent(selectedVenue.id)}` : ""
+              }`}
+            >
+              Next
+            </Link>
+          </nav>
+          <p className="admin-footnote">
+            {monthConfirmed
+              ? `Showing ${monthLabel(year, month)} — confirmed. Scrapes will not change this month. `
+              : `Showing ${monthLabel(year, month)}. `}
+            {finish ? `Run continues until ${formatAdminDate(finish)}. ` : ""}
+            {visible.length} published curtains in the catalog
+            {suppressed.length ? `, ${suppressed.length} removed and locked` : ""}.
+          </p>
+
+          <div className={`admin-cal fit-page${monthConfirmed ? " confirmed" : ""}`}>
+            {WEEKDAYS.map((label) => (
+              <div key={label} className="admin-cal-head">
+                {label}
+              </div>
+            ))}
+            {cells.map((cell, index) => {
+              const curtains = cell.ymd ? (byDay.get(cell.ymd) ?? []) : [];
+              return (
+                <div
+                  key={`${cell.ymd ?? "empty"}-${index}`}
+                  className={`admin-cal-day${cell.day ? "" : " empty"}`}
+                >
+                  {cell.day ? <span className="admin-cal-num">{cell.day}</span> : null}
+                  {curtains.map((curtain) => (
+                    <div
+                      key={curtain.id}
+                      className={`admin-curtain${isAdminLocked(curtain) ? " locked" : ""}`}
+                    >
+                      <span className="admin-curtain-time">
+                        {formatLondonTime(curtain.starts_at)}
+                      </span>
+                      {touring || curtain.venue_name ? (
+                        <span className="admin-curtain-venue">
+                          {curtain.venue_name}
+                          {curtain.venue_city ? `, ${curtain.venue_city}` : ""}
+                        </span>
+                      ) : null}
+                      <form action={deleteCurtainAction}>
+                        <input type="hidden" name="productionId" value={production.id} />
+                        <input type="hidden" name="curtainId" value={curtain.id} />
+                        <button type="submit" className="admin-tiny">
+                          Remove
+                        </button>
+                      </form>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+
+          <section className="admin-add">
+            <h2>Add a curtain</h2>
+            <p>
+              Saved as definite. A later refresh will not delete it. Times are
+              Europe/London.
+            </p>
+            <form action={addCurtainAction} className="admin-form row">
+              <input type="hidden" name="productionId" value={production.id} />
+              <label>
+                Date
+                <input type="date" name="date" required />
+              </label>
+              <label>
+                Time
+                <input type="time" name="time" required />
+              </label>
+              <label>
+                Venue{touring ? "" : " (optional)"}
+                <input
+                  type="text"
+                  name="venueName"
+                  required={touring}
+                  defaultValue={
+                    touring
+                      ? selectedVenue?.venue_name ?? ""
+                      : (production.venue_summary ?? "")
+                  }
+                />
+              </label>
+              <label>
+                City
+                <input
+                  type="text"
+                  name="venueCity"
+                  defaultValue={touring ? selectedVenue?.city ?? "" : ""}
+                />
+              </label>
+              <label className="wide">
+                Address
+                <input type="text" name="venueAddress" />
+              </label>
+              <button type="submit">Add curtain</button>
+            </form>
+          </section>
+
+          {suppressed.length > 0 ? (
+            <section className="admin-removed">
+              <h2>Removed, locked against refresh</h2>
+              <ul>
+                {suppressed.map((curtain) => (
+                  <li key={curtain.id}>
+                    {formatAdminDate(londonYmd(curtain.starts_at))} {formatLondonTime(curtain.starts_at)}
+                    {curtain.venue_name ? ` · ${curtain.venue_name}` : ""}
+                    <form action={restoreCurtainAction}>
+                      <input type="hidden" name="productionId" value={production.id} />
+                      <input type="hidden" name="curtainId" value={curtain.id} />
+                      <button type="submit" className="admin-tiny">
+                        Restore
+                      </button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </>
+      ) : (
+        <section className="admin-toolbar">
+          <div className="admin-toolbar-actions">
+            <RefreshScrapeDialog
+              productionId={production.id}
+              listingKind={production.listing_kind}
+              showName={production.name}
+            />
+          </div>
+          <p>Refresh looks up newly published nights for this tour.</p>
+        </section>
+      )}
     </main>
   );
 }
