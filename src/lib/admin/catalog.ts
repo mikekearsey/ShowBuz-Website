@@ -1,4 +1,4 @@
-import { ADMIN_SOURCE, ADMIN_SUPPRESSED_SOURCE } from "./constants";
+import { ADMIN_SOURCE, ADMIN_SUPPRESSED_SOURCE, LONDON_TZ } from "./constants";
 import { londonWallTimeToIso } from "./london";
 
 type RestError = { message?: string; error?: string };
@@ -16,6 +16,7 @@ export type CatalogProduction = {
   scrape_error: string | null;
   last_scraped_at: string | null;
   refresh_enqueued_at: string | null;
+  admin_locked_months: string[];
   source_provider: string | null;
 };
 
@@ -138,14 +139,25 @@ export function isAdminLocked(performance: Pick<CatalogPerformance, "source">): 
 }
 
 const PRODUCTION_FIELDS =
-  "id,name,listing_kind,venue_summary,run_start_date,run_end_date,scrape_status,scrape_error,last_scraped_at,refresh_enqueued_at,source_provider";
+  "id,name,listing_kind,venue_summary,run_start_date,run_end_date,scrape_status,scrape_error,last_scraped_at,refresh_enqueued_at,admin_locked_months,source_provider";
 const PRODUCTION_FIELDS_LEGACY =
   "id,name,listing_kind,venue_summary,run_start_date,run_end_date,scrape_status,last_scraped_at,refresh_enqueued_at,source_provider";
+const PRODUCTION_FIELDS_NO_LOCKED =
+  "id,name,listing_kind,venue_summary,run_start_date,run_end_date,scrape_status,scrape_error,last_scraped_at,refresh_enqueued_at,source_provider";
 
-function withNullScrapeError<T extends { scrape_error?: string | null }>(
+function withNullScrapeError<T extends {
+  scrape_error?: string | null;
+  admin_locked_months?: string[] | null;
+}>(
   rows: T[],
-): Array<T & { scrape_error: string | null }> {
-  return rows.map((row) => ({ ...row, scrape_error: row.scrape_error ?? null }));
+): Array<T & { scrape_error: string | null; admin_locked_months: string[] }> {
+  return rows.map((row) => ({
+    ...row,
+    scrape_error: row.scrape_error ?? null,
+    admin_locked_months: Array.isArray(row.admin_locked_months)
+      ? row.admin_locked_months
+      : [],
+  }));
 }
 
 export async function listProductions(): Promise<CatalogProduction[]> {
@@ -155,7 +167,14 @@ export async function listProductions(): Promise<CatalogProduction[]> {
     );
     return withNullScrapeError(rows);
   } catch (error) {
-    if (!String(error).includes("scrape_error")) throw error;
+    const message = String(error);
+    if (message.includes("admin_locked_months")) {
+      const rows = await rest<CatalogProduction[]>(
+        `catalog_productions?select=${PRODUCTION_FIELDS_NO_LOCKED}&order=name.asc`,
+      );
+      return withNullScrapeError(rows);
+    }
+    if (!message.includes("scrape_error")) throw error;
     const rows = await rest<CatalogProduction[]>(
       `catalog_productions?select=${PRODUCTION_FIELDS_LEGACY}&order=name.asc`,
     );
@@ -172,7 +191,14 @@ export async function getProduction(
     );
     return withNullScrapeError(rows)[0] ?? null;
   } catch (error) {
-    if (!String(error).includes("scrape_error")) throw error;
+    const message = String(error);
+    if (message.includes("admin_locked_months")) {
+      const rows = await rest<CatalogProduction[]>(
+        `catalog_productions?id=eq.${encodeURIComponent(id)}&select=${PRODUCTION_FIELDS_NO_LOCKED}`,
+      );
+      return withNullScrapeError(rows)[0] ?? null;
+    }
+    if (!message.includes("scrape_error")) throw error;
     const rows = await rest<CatalogProduction[]>(
       `catalog_productions?id=eq.${encodeURIComponent(id)}&select=${PRODUCTION_FIELDS_LEGACY}`,
     );
@@ -233,6 +259,54 @@ export async function restoreCurtain(id: string): Promise<void> {
       body: JSON.stringify({ source: ADMIN_SOURCE }),
     },
   );
+}
+
+
+export async function confirmCatalogMonth(
+  productionId: string,
+  yearMonth: string,
+  performances: CatalogPerformance[],
+): Promise<{ lockedCurtains: number }> {
+  if (!/^\d{4}-\d{2}$/.test(yearMonth)) {
+    throw new Error("Month must be YYYY-MM.");
+  }
+  const inMonth = performances.filter((row) => {
+    if (isSuppressed(row)) return false;
+    const ymd = new Intl.DateTimeFormat("en-CA", {
+      timeZone: LONDON_TZ,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(row.starts_at));
+    return ymd.startsWith(yearMonth);
+  });
+
+  for (const row of inMonth) {
+    if (row.source === ADMIN_SOURCE) continue;
+    await rest<CatalogPerformance[]>(
+      `catalog_performances?id=eq.${encodeURIComponent(row.id)}`,
+      {
+        write: true,
+        method: "PATCH",
+        body: JSON.stringify({ source: ADMIN_SOURCE }),
+      },
+    );
+  }
+
+  const production = await getProduction(productionId);
+  if (!production) throw new Error("Production not found.");
+  const locked = new Set(production.admin_locked_months ?? []);
+  locked.add(yearMonth);
+  const months = [...locked].sort();
+  await rest<CatalogProduction[]>(
+    `catalog_productions?id=eq.${encodeURIComponent(productionId)}`,
+    {
+      write: true,
+      method: "PATCH",
+      body: JSON.stringify({ admin_locked_months: months }),
+    },
+  );
+  return { lockedCurtains: inMonth.length };
 }
 
 export async function refreshProduction(production: CatalogProduction): Promise<unknown> {

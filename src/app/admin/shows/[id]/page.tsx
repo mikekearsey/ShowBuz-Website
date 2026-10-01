@@ -3,11 +3,12 @@ import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import {
   addCurtainAction,
+  confirmMonthAction,
   deleteCurtainAction,
   logoutAction,
-  refreshShowAction,
   restoreCurtainAction,
 } from "../../actions";
+import { RefreshScrapeDialog } from "@/components/admin/RefreshScrapeDialog";
 import {
   getProduction,
   isAdminLocked,
@@ -61,6 +62,8 @@ function notice(value: string | undefined): string | null {
       return "Curtain removed. Further refreshes will not put this night back.";
     case "restore":
       return "Curtain restored and locked.";
+    case "confirm":
+      return "This month is confirmed. Future scrapes will not change these curtains or add nights in this month.";
     default:
       return null;
   }
@@ -76,6 +79,8 @@ function errorNotice(value: string | undefined): string | null {
       return "Could not remove that curtain.";
     case "restore":
       return "Could not restore that curtain.";
+    case "confirm":
+      return "Could not confirm this month.";
     default:
       return null;
   }
@@ -126,6 +131,8 @@ export default async function AdminShowPage({
   const prev = shiftMonth(year, month, -1);
   const next = shiftMonth(year, month, 1);
   const cells = calendarCells(year, month);
+  const yearMonth = `${year}-${String(month).padStart(2, "0")}`;
+  const monthConfirmed = (production.admin_locked_months ?? []).includes(yearMonth);
   const finish = production.run_end_date;
 
   return (
@@ -176,14 +183,26 @@ export default async function AdminShowPage({
       ) : null}
 
       <section className="admin-toolbar">
-        <form action={refreshShowAction}>
-          <input type="hidden" name="productionId" value={production.id} />
-          <button type="submit">Refresh published dates</button>
-        </form>
+        <div className="admin-toolbar-actions">
+          <RefreshScrapeDialog
+            productionId={production.id}
+            listingKind={production.listing_kind}
+            showName={production.name}
+          />
+          <form action={confirmMonthAction}>
+            <input type="hidden" name="productionId" value={production.id} />
+            <input type="hidden" name="yearMonth" value={yearMonth} />
+            <button type="submit" className="admin-ghost" disabled={monthConfirmed}>
+              {monthConfirmed
+                ? "This month confirmed"
+                : "Confirm this month is correct"}
+            </button>
+          </form>
+        </div>
         <p>
-          Refresh asks the catalog scraper for this show again. It only adds
-          newly published nights. Nights you add or remove here stay as you set
-          them.
+          Refresh looks up newly published nights. Confirm locks only the month
+          you are viewing — later months can still gain dates if the run
+          extends. Nights you add or remove here stay as you set them.
         </p>
       </section>
 
@@ -196,15 +215,16 @@ export default async function AdminShowPage({
           Next
         </Link>
       </nav>
-      {finish ? (
-        <p className="admin-footnote">
-          Use next month until {finish}. {visible.length} published curtains in
-          the catalog
-          {suppressed.length ? `, ${suppressed.length} removed and locked` : ""}.
-        </p>
-      ) : null}
+      <p className="admin-footnote">
+        {monthConfirmed
+          ? `Showing ${monthLabel(year, month)} — confirmed. Scrapes will not change this month. `
+          : `Showing ${monthLabel(year, month)}. `}
+        {finish ? `Run continues until ${formatAdminDate(finish)}. ` : ""}
+        {visible.length} published curtains in the catalog
+        {suppressed.length ? `, ${suppressed.length} removed and locked` : ""}.
+      </p>
 
-      <div className="admin-cal">
+      <div className={`admin-cal${monthConfirmed ? " confirmed" : ""}`}>
         {WEEKDAYS.map((label) => (
           <div key={label} className="admin-cal-head">
             {label}

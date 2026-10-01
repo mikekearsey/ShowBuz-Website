@@ -2,7 +2,9 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   addCurtain,
+  confirmCatalogMonth,
   getProduction,
+  listPerformances,
   refreshProduction,
   restoreCurtain,
   signInWithPassword,
@@ -115,4 +117,62 @@ export async function restoreCurtainAction(formData: FormData) {
     redirect(`/admin/shows/${productionId}?error=restore`);
   }
   redirect(`/admin/shows/${productionId}?ok=restore`);
+}
+
+export async function confirmMonthAction(formData: FormData) {
+  "use server";
+  const productionId = String(formData.get("productionId") ?? "");
+  const yearMonth = String(formData.get("yearMonth") ?? "");
+  if (!productionId || !/^\d{4}-\d{2}$/.test(yearMonth)) {
+    redirect("/admin");
+  }
+  try {
+    const performances = await listPerformances(productionId);
+    await confirmCatalogMonth(productionId, yearMonth, performances);
+  } catch {
+    redirect(`/admin/shows/${productionId}?month=${yearMonth}&error=confirm`);
+  }
+  redirect(`/admin/shows/${productionId}?month=${yearMonth}&ok=confirm`);
+}
+
+export type RefreshShowResult = {
+  ok: boolean;
+  error?: string;
+  nights?: number;
+  scrapeStatus?: string;
+  scrapeError?: string | null;
+  fromCache?: boolean;
+  sourceProvider?: string | null;
+  venueRuns?: number;
+};
+
+export async function refreshShowWithProgress(
+  productionId: string,
+): Promise<RefreshShowResult> {
+  "use server";
+  const production = await getProduction(productionId);
+  if (!production) return { ok: false, error: "Show not found." };
+  try {
+    const raw = await refreshProduction(production);
+    const result = (raw ?? {}) as Record<string, unknown>;
+    return {
+      ok: true,
+      nights: typeof result.nights === "number" ? result.nights : undefined,
+      scrapeStatus:
+        typeof result.scrapeStatus === "string" ? result.scrapeStatus : undefined,
+      scrapeError:
+        typeof result.scrapeError === "string" || result.scrapeError === null
+          ? (result.scrapeError as string | null)
+          : null,
+      fromCache: typeof result.fromCache === "boolean" ? result.fromCache : undefined,
+      sourceProvider:
+        typeof result.sourceProvider === "string" ? result.sourceProvider : null,
+      venueRuns: typeof result.venueRuns === "number" ? result.venueRuns : undefined,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Refresh failed.",
+    };
+  }
 }
