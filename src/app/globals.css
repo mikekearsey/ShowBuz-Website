@@ -786,61 +786,108 @@ body {
   overflow: hidden;
 }
 
+.admin-tour-split {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin: 0 0 20px;
+}
+
 .admin-itinerary {
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 10px;
-  padding: 16px;
+  padding: 12px;
   margin: 0 0 20px;
 }
 
-.admin-itinerary-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+.admin-itinerary.sidebar {
+  margin: 0;
+  max-height: calc(100dvh - 180px);
+  overflow: auto;
+  position: sticky;
+  top: 12px;
 }
 
-.admin-itinerary-head h2 {
-  margin: 0;
-  font-size: 1.1rem;
+.admin-itinerary.sidebar h2 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+}
+
+.admin-itinerary.sidebar .admin-footnote {
+  margin: 0 0 8px;
+  font-size: 11px;
 }
 
 .admin-itinerary-list {
   list-style: none;
-  margin: 12px 0 0;
+  margin: 0;
   padding: 0;
   display: grid;
-  gap: 6px;
+  gap: 2px;
 }
 
 .admin-itinerary-row {
   display: flex;
-  justify-content: space-between;
-  gap: 16px;
+  flex-wrap: wrap;
   align-items: baseline;
-  padding: 10px 12px;
-  border: 1px solid #e8e8e8;
-  border-radius: 8px;
+  gap: 6px 8px;
+  padding: 5px 6px;
+  border-radius: 4px;
   text-decoration: none;
   color: inherit;
-  background: #fafafa;
+  font-size: 12px;
+  line-height: 1.3;
 }
 
 .admin-itinerary-row:hover,
 .admin-itinerary-row.active {
-  border-color: #1a1a1a;
-  background: #fff;
+  background: #f0f0f0;
+}
+
+.admin-itinerary-row.active {
+  background: #e8f1ff;
+  font-weight: 600;
 }
 
 .admin-itinerary-venue {
   font-weight: 600;
+  min-width: 0;
 }
 
 .admin-itinerary-dates {
   color: #555;
-  font-size: 13px;
+  font-size: 11px;
   white-space: nowrap;
+}
+
+.admin-tour-calendar {
+  min-width: 0;
+}
+
+.admin-toolbar.compact {
+  margin-bottom: 8px;
+  padding: 10px 12px;
+}
+
+.admin-toolbar.compact p {
+  display: none;
+}
+
+.admin-cal.fit-page {
+  height: min(68vh, calc(100dvh - 260px));
+}
+
+@media (max-width: 900px) {
+  .admin-tour-split {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-itinerary.sidebar {
+    position: static;
+    max-height: 240px;
+  }
 }
 
 
