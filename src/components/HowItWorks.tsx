@@ -35,6 +35,14 @@ export function HowItWorks() {
           <p className="mt-4 text-muted text-pretty">
             The app does the messaging. Your diary updates seamlessly.
           </p>
+          <p className="mt-6">
+            <a
+              href="/guide"
+              className="text-sm font-semibold text-buzz-bright underline decoration-buzz/40 underline-offset-4 transition hover:decoration-buzz"
+            >
+              How to use the app
+            </a>
+          </p>
         </div>
         <ol className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((step) => (

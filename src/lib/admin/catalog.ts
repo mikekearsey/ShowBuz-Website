@@ -3,18 +3,56 @@ import { londonWallTimeToIso } from "./london";
 
 type RestError = { message?: string; error?: string };
 
+export type CatalogListingKind = "resident" | "touring";
+
 export type CatalogProduction = {
   id: string;
   name: string;
-  listing_kind: "resident" | "touring";
+  listing_kind: CatalogListingKind;
   venue_summary: string | null;
   run_start_date: string | null;
   run_end_date: string | null;
   scrape_status: string;
+  scrape_error: string | null;
   last_scraped_at: string | null;
   refresh_enqueued_at: string | null;
   source_provider: string | null;
 };
+
+export type CatalogScrapeFilter =
+  | "all"
+  | "ok"
+  | "empty"
+  | "error"
+  | "pending"
+  | "ignored";
+
+export function scrapeStatusLabel(
+  production: Pick<CatalogProduction, "scrape_status" | "listing_kind">,
+): string {
+  if (production.scrape_status === "empty" && production.listing_kind === "touring") {
+    return "No published dates";
+  }
+  if (production.scrape_status === "empty") return "No dates found";
+  if (production.scrape_status === "pending") return "Not scraped yet";
+  if (production.scrape_status === "error") return "Error";
+  if (production.scrape_status === "ignored") return "Ignored";
+  if (production.scrape_status === "ok") return "OK";
+  return production.scrape_status;
+}
+
+export function parseScrapeFilter(value: string | undefined): CatalogScrapeFilter {
+  if (
+    value === "ok" ||
+    value === "empty" ||
+    value === "error" ||
+    value === "pending" ||
+    value === "ignored"
+  ) {
+    return value;
+  }
+  return "all";
+}
 
 export type CatalogPerformance = {
   id: string;
@@ -99,19 +137,47 @@ export function isAdminLocked(performance: Pick<CatalogPerformance, "source">): 
   );
 }
 
+const PRODUCTION_FIELDS =
+  "id,name,listing_kind,venue_summary,run_start_date,run_end_date,scrape_status,scrape_error,last_scraped_at,refresh_enqueued_at,source_provider";
+const PRODUCTION_FIELDS_LEGACY =
+  "id,name,listing_kind,venue_summary,run_start_date,run_end_date,scrape_status,last_scraped_at,refresh_enqueued_at,source_provider";
+
+function withNullScrapeError<T extends { scrape_error?: string | null }>(
+  rows: T[],
+): Array<T & { scrape_error: string | null }> {
+  return rows.map((row) => ({ ...row, scrape_error: row.scrape_error ?? null }));
+}
+
 export async function listProductions(): Promise<CatalogProduction[]> {
-  return rest<CatalogProduction[]>(
-    "catalog_productions?select=id,name,listing_kind,venue_summary,run_start_date,run_end_date,scrape_status,last_scraped_at,refresh_enqueued_at,source_provider&order=name.asc",
-  );
+  try {
+    const rows = await rest<CatalogProduction[]>(
+      `catalog_productions?select=${PRODUCTION_FIELDS}&order=name.asc`,
+    );
+    return withNullScrapeError(rows);
+  } catch (error) {
+    if (!String(error).includes("scrape_error")) throw error;
+    const rows = await rest<CatalogProduction[]>(
+      `catalog_productions?select=${PRODUCTION_FIELDS_LEGACY}&order=name.asc`,
+    );
+    return withNullScrapeError(rows);
+  }
 }
 
 export async function getProduction(
   id: string,
 ): Promise<CatalogProduction | null> {
-  const rows = await rest<CatalogProduction[]>(
-    `catalog_productions?id=eq.${encodeURIComponent(id)}&select=id,name,listing_kind,venue_summary,run_start_date,run_end_date,scrape_status,last_scraped_at,refresh_enqueued_at,source_provider`,
-  );
-  return rows[0] ?? null;
+  try {
+    const rows = await rest<CatalogProduction[]>(
+      `catalog_productions?id=eq.${encodeURIComponent(id)}&select=${PRODUCTION_FIELDS}`,
+    );
+    return withNullScrapeError(rows)[0] ?? null;
+  } catch (error) {
+    if (!String(error).includes("scrape_error")) throw error;
+    const rows = await rest<CatalogProduction[]>(
+      `catalog_productions?id=eq.${encodeURIComponent(id)}&select=${PRODUCTION_FIELDS_LEGACY}`,
+    );
+    return withNullScrapeError(rows)[0] ?? null;
+  }
 }
 
 export async function listPerformances(

@@ -42,6 +42,9 @@ export function Footer() {
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
           <ContactEmail className="underline decoration-white/35 underline-offset-4 hover:text-foreground hover:decoration-buzz" />
+          <a href="/guide" className="hover:text-foreground">
+            How to use
+          </a>
           <a href="/privacy" className="hover:text-foreground">
             Privacy Policy
           </a>

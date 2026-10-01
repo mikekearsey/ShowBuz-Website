@@ -13,6 +13,7 @@ import {
   isAdminLocked,
   isSuppressed,
   listPerformances,
+  scrapeStatusLabel,
   type CatalogPerformance,
 } from "@/lib/admin/catalog";
 import { formatLondonTime, londonYmd, londonYearMonth } from "@/lib/admin/london";
@@ -132,20 +133,29 @@ export default async function AdminShowPage({
       <header className="admin-top">
         <div>
           <p className="admin-kicker">
-            <Link href="/admin">Shows</Link>
+            <Link href={production.listing_kind === "touring" ? "/admin/touring" : "/admin/resident"}>
+              {production.listing_kind === "touring" ? "Touring shows" : "Resident shows"}
+            </Link>
             {" / "}
-            {production.listing_kind}
+            Show
           </p>
           <h1>{production.name}</h1>
           <p className="admin-lead">
             {production.venue_summary ? `${production.venue_summary}. ` : null}
             Catalog run {production.run_start_date ?? "—"} to{" "}
-            {production.run_end_date ?? "—"}. Scrape {production.scrape_status}
+            {production.run_end_date ?? "—"}.{" "}
+            {production.listing_kind === "touring" &&
+            production.scrape_status === "empty"
+              ? "No published tour dates"
+              : `Scrape ${scrapeStatusLabel(production)}`}
             {production.last_scraped_at
               ? `, last ${new Date(production.last_scraped_at).toLocaleString("en-GB")}`
               : ""}
             .
           </p>
+          {production.scrape_error ? (
+            <p className="admin-footnote">Last scrape note: {production.scrape_error}</p>
+          ) : null}
         </div>
         <form action={logoutAction}>
           <button type="submit" className="admin-ghost">

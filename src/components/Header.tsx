@@ -17,7 +17,10 @@ export function Header() {
           <a href="/#how" className="hidden transition hover:text-foreground sm:inline">
             How it works
           </a>
-          <a href="/#features" className="hidden transition hover:text-foreground sm:inline">
+          <a href="/guide" className="hidden transition hover:text-foreground sm:inline">
+            Guide
+          </a>
+          <a href="/#features" className="hidden transition hover:text-foreground lg:inline">
             Features
           </a>
           <a href="/#faq" className="hidden transition hover:text-foreground lg:inline">

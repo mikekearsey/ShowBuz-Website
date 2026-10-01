@@ -1,32 +1,6 @@
-import Image from "next/image";
 import { Logo } from "./Logo";
+import { PhoneFrame } from "./PhoneFrame";
 import { StoreButtons } from "./StoreButtons";
-
-/** iPhone 15/16 logical aspect: 393 × 852 */
-export function PhonePreview() {
-  return (
-    <div className="relative mx-auto w-[228px] sm:w-[248px] lg:w-[272px]">
-      <div className="relative rounded-[2.65rem] bg-[#1a1a1c] p-[9px] shadow-[0_40px_80px_rgb(0_0_0_/_0.55),inset_0_0_0_1px_rgb(255_255_255_/_0.08)]">
-        <span className="absolute top-[18%] -left-[3px] h-8 w-[3px] rounded-l-sm bg-[#2a2a2c]" />
-        <span className="absolute top-[28%] -left-[3px] h-12 w-[3px] rounded-l-sm bg-[#2a2a2c]" />
-        <span className="absolute top-[38%] -left-[3px] h-12 w-[3px] rounded-l-sm bg-[#2a2a2c]" />
-        <span className="absolute top-[30%] -right-[3px] h-16 w-[3px] rounded-r-sm bg-[#2a2a2c]" />
-
-        <div className="relative aspect-[393/852] overflow-hidden rounded-[2.15rem] bg-black">
-          <Image
-            src="/app-screen.png"
-            alt="ShowBuz day view for West Side Story at Theatre Royal, with Confirmed on the night"
-            fill
-            priority
-            unoptimized
-            sizes="(min-width: 1024px) 272px, (min-width: 640px) 248px, 228px"
-            className="object-contain object-top"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function Hero() {
   return (
@@ -95,7 +69,11 @@ export function Hero() {
             priority
             className="pointer-events-none absolute -top-3 -right-3 z-10 h-20 w-20 sm:-right-5 sm:h-24 sm:w-24"
           />
-          <PhonePreview />
+          <PhoneFrame
+            src="/app-screen.png"
+            alt="ShowBuz day view for West Side Story at Theatre Royal, with Confirmed on the night"
+            priority
+          />
         </div>
       </div>
     </section>

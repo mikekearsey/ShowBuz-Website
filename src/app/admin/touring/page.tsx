@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { CatalogShowsList } from "@/components/admin/CatalogShowsList";
 import { adminCookieName, readAdminEmail } from "@/lib/admin/session";
 
-export default async function AdminHomePage({
+export default async function AdminTouringPage({
   searchParams,
 }: {
   searchParams: Promise<{ status?: string }>;
@@ -12,9 +13,7 @@ export default async function AdminHomePage({
   if (!email) redirect("/admin/login");
 
   const query = await searchParams;
-  const status = query.status?.trim();
-  if (status) {
-    redirect(`/admin/resident?status=${encodeURIComponent(status)}`);
-  }
-  redirect("/admin/resident");
+  return (
+    <CatalogShowsList kind="touring" status={query.status} email={email} />
+  );
 }
