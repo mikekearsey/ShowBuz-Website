@@ -1,5 +1,6 @@
 import type { CatalogProduction } from "./catalog";
 import { scrapeStatusLabel } from "./catalog";
+import { formatAdminDateTime } from "./london";
 
 export type ScrapeExplanation = {
   headline: string;
@@ -13,15 +14,8 @@ export type ScrapeExplanation = {
 
 function formatWhen(iso: string | null | undefined): string | null {
   if (!iso) return null;
-  const date = new Date(iso);
-  if (!Number.isFinite(date.getTime())) return null;
-  return date.toLocaleString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const label = formatAdminDateTime(iso);
+  return label === "—" ? null : label;
 }
 
 function translateTechnicalNote(

@@ -7,6 +7,7 @@ import {
   type CatalogListingKind,
   type CatalogScrapeFilter,
 } from "@/lib/admin/catalog";
+import { formatAdminDate } from "@/lib/admin/london";
 
 const FILTERS: Array<{ id: CatalogScrapeFilter; label: string }> = [
   { id: "all", label: "All" },
@@ -130,8 +131,8 @@ export async function CatalogShowsList({
                   <Link href={`/admin/shows/${show.id}`}>{show.name}</Link>
                 </td>
                 <td>{show.venue_summary ?? "—"}</td>
-                <td>{show.run_start_date ?? "—"}</td>
-                <td>{show.run_end_date ?? "—"}</td>
+                <td>{formatAdminDate(show.run_start_date)}</td>
+                <td>{formatAdminDate(show.run_end_date)}</td>
                 <td>
                   <ScrapeStatusDetail production={show} />
                 </td>

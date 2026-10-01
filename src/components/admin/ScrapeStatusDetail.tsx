@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { CatalogProduction } from "@/lib/admin/catalog";
 import { scrapeStatusLabel } from "@/lib/admin/catalog";
 import { explainScrape } from "@/lib/admin/scrape-explain";
+import { formatAdminDate } from "@/lib/admin/london";
 
 export function ScrapeStatusDetail({
   production,
@@ -83,8 +84,8 @@ export function ScrapeStatusDetail({
                   <dd>{production.venue_summary ?? "Not set"}</dd>
                   <dt>Run</dt>
                   <dd>
-                    {production.run_start_date ?? "—"} to{" "}
-                    {production.run_end_date ?? "—"}
+                    {formatAdminDate(production.run_start_date)} to{" "}
+                    {formatAdminDate(production.run_end_date)}
                   </dd>
                   {explanation.lastScrapedLabel ? (
                     <>

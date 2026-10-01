@@ -16,7 +16,7 @@ import {
   scrapeStatusLabel,
   type CatalogPerformance,
 } from "@/lib/admin/catalog";
-import { formatLondonTime, londonYmd, londonYearMonth } from "@/lib/admin/london";
+import { formatAdminDate, formatAdminDateTime, formatLondonTime, londonYmd, londonYearMonth } from "@/lib/admin/london";
 import { adminCookieName, readAdminEmail } from "@/lib/admin/session";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -142,14 +142,14 @@ export default async function AdminShowPage({
           <h1>{production.name}</h1>
           <p className="admin-lead">
             {production.venue_summary ? `${production.venue_summary}. ` : null}
-            Catalog run {production.run_start_date ?? "—"} to{" "}
-            {production.run_end_date ?? "—"}.{" "}
+            Catalog run {formatAdminDate(production.run_start_date)} to{" "}
+            {formatAdminDate(production.run_end_date)}.{" "}
             {production.listing_kind === "touring" &&
             production.scrape_status === "empty"
               ? "No published tour dates"
               : `Scrape ${scrapeStatusLabel(production)}`}
             {production.last_scraped_at
-              ? `, last ${new Date(production.last_scraped_at).toLocaleString("en-GB")}`
+              ? `, last ${formatAdminDateTime(production.last_scraped_at)}`
               : ""}
             .
           </p>
@@ -289,7 +289,7 @@ export default async function AdminShowPage({
           <ul>
             {suppressed.map((curtain) => (
               <li key={curtain.id}>
-                {londonYmd(curtain.starts_at)} {formatLondonTime(curtain.starts_at)}
+                {formatAdminDate(londonYmd(curtain.starts_at))} {formatLondonTime(curtain.starts_at)}
                 {curtain.venue_name ? ` · ${curtain.venue_name}` : ""}
                 <form action={restoreCurtainAction}>
                   <input type="hidden" name="productionId" value={production.id} />

@@ -58,3 +58,36 @@ export function londonYearMonth(iso: string): { year: number; month: number } {
   const month = Number(parts.find((part) => part.type === "month")?.value);
   return { year, month };
 }
+
+/** Catalog calendar day or ISO instant → dd/mm/yy (London for instants). */
+export function formatAdminDate(value: string | null | undefined): string {
+  if (!value) return "—";
+  const trimmed = value.trim();
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  if (ymd) {
+    return `${ymd[3]}/${ymd[2]}/${ymd[1].slice(2)}`;
+  }
+  const date = new Date(trimmed);
+  if (!Number.isFinite(date.getTime())) return trimmed;
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: LONDON_TZ,
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  }).format(date);
+}
+
+/** ISO instant → dd/mm/yy, HH:mm (London). */
+export function formatAdminDateTime(value: string | null | undefined): string {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return value;
+  const day = formatAdminDate(value);
+  const time = new Intl.DateTimeFormat("en-GB", {
+    timeZone: LONDON_TZ,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(date);
+  return `${day}, ${time}`;
+}
