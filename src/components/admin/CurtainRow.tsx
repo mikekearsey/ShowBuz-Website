@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { deleteCurtainAction } from "@/app/admin/actions";
+import { CircleX } from "@/components/icons/CircleX";
 import { formatCurtainRemoveWhen, formatLondonTime } from "@/lib/admin/london";
 
 export function CurtainRow({
@@ -31,7 +32,7 @@ export function CurtainRow({
             aria-label={phrase}
             onClick={() => setConfirming(true)}
           >
-            <span aria-hidden="true">×</span>
+            <CircleX />
           </button>
         )}
       </div>

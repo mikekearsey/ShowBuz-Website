@@ -989,21 +989,25 @@ body {
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  box-sizing: border-box;
-  width: 1lh;
-  height: 1lh;
-  min-width: 1lh;
-  min-height: 1lh;
+  width: 1em;
+  height: 1em;
+  min-width: 1em;
+  min-height: 1em;
   margin: 0;
   padding: 0;
-  border: 1px solid #e4b4ae;
-  border-radius: 50%;
-  background: #fff;
-  color: #b42318;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #666;
   font: inherit;
-  font-weight: 500;
-  line-height: inherit;
+  line-height: 1;
   cursor: pointer;
+}
+
+.admin-app button.admin-curtain-x svg {
+  display: block;
+  width: 1em;
+  height: 1em;
 }
 
 .admin-app button.admin-curtain-x::before {
@@ -1016,16 +1020,10 @@ body {
   transform: translate(-50%, -50%);
 }
 
-.admin-app button.admin-curtain-x span {
-  position: relative;
-  z-index: 1;
-  font-size: 1em;
-  line-height: 1;
-}
-
-.admin-app button.admin-curtain-x:hover {
-  border-color: #b42318;
-  background: #fdf6f5;
+.admin-app button.admin-curtain-x:hover,
+.admin-app button.admin-curtain-x:focus-visible {
+  background: transparent;
+  color: #b42318;
 }
 
 .admin-app button.admin-curtain-x:focus-visible {
