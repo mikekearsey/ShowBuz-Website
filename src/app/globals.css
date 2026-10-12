@@ -985,39 +985,45 @@ body {
 
 .admin-app button.admin-curtain-x {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
+  box-sizing: border-box;
+  width: 1lh;
+  height: 1lh;
+  min-width: 1lh;
+  min-height: 1lh;
   margin: 0;
   padding: 0;
-  border: 0;
+  border: 1px solid #e4b4ae;
   border-radius: 50%;
-  background: transparent;
+  background: #fff;
   color: #b42318;
   font: inherit;
-  font-size: 16px;
   font-weight: 500;
-  line-height: 1;
+  line-height: inherit;
   cursor: pointer;
 }
 
 .admin-app button.admin-curtain-x::before {
   content: "";
   position: absolute;
-  inset: 2px;
-  border: 1px solid #e4b4ae;
-  border-radius: 50%;
-  background: #fff;
+  left: 50%;
+  top: 50%;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
 }
 
 .admin-app button.admin-curtain-x span {
   position: relative;
   z-index: 1;
+  font-size: 1em;
+  line-height: 1;
 }
 
-.admin-app button.admin-curtain-x:hover::before {
+.admin-app button.admin-curtain-x:hover {
   border-color: #b42318;
   background: #fdf6f5;
 }
