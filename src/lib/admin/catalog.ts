@@ -68,9 +68,14 @@ export function parseScrapeFilter(value: string | undefined): CatalogScrapeFilte
   return "all";
 }
 
-/** True when the catalog still has a published night (or run end) on/after today. */
+/**
+ * True when the catalog still has published diary evidence on/after today.
+ * Bare `run_end_date` alone does not count for empty/pending scrapes (stale
+ * finish dates). OK scrapes may use run_end when performance stats are thin.
+ * Stale `scrape_status=empty` is ignored when performance/venue evidence exists.
+ */
 export function catalogHasFutureDates(
-  production: Pick<CatalogProduction, "run_end_date">,
+  production: Pick<CatalogProduction, "run_end_date" | "scrape_status">,
   opts?: {
     todayYmd?: string;
     venueRunEndDates?: string[];
@@ -85,10 +90,19 @@ export function catalogHasFutureDates(
       month: "2-digit",
       day: "2-digit",
     }).format(new Date());
+  const venueEnds = opts?.venueRunEndDates ?? [];
+  const hasDiaryOrItinerary =
+    Boolean(opts?.performanceEndDate) || venueEnds.length > 0;
+  // Truly empty scrapes with no diary/itinerary evidence are not "future".
+  if (production.scrape_status === "empty" && !hasDiaryOrItinerary) {
+    return false;
+  }
+  const trustRunEnd =
+    production.scrape_status === "ok" || hasDiaryOrItinerary;
   const candidates = [
-    production.run_end_date,
+    trustRunEnd ? production.run_end_date : null,
     opts?.performanceEndDate ?? null,
-    ...(opts?.venueRunEndDates ?? []),
+    ...venueEnds,
   ].filter((value): value is string => Boolean(value && /^\d{4}-\d{2}-\d{2}/.test(value)));
   return candidates.some((ymd) => ymd.slice(0, 10) >= today);
 }
@@ -267,7 +281,9 @@ function serviceKey(): string {
 }
 
 function restHeaders(write: boolean): HeadersInit {
-  const key = write ? serviceKey() : anonKey();
+  // Prefer service role for Admin catalog reads so archive/list stats see the
+  // full diary (PostgREST anon + max-rows can otherwise under-count).
+  const key = serviceKey() || (!write ? anonKey() : "");
   if (!key) {
     throw new Error(
       write
@@ -306,6 +322,26 @@ async function rest<T>(
   }
   if (!text) return [] as T;
   return JSON.parse(text) as T;
+}
+
+/**
+ * PostgREST projects default to max-rows=1000. A bare `limit=` above that is
+ * still capped — page with offset until a short page is returned.
+ */
+async function restAll<T>(path: string, pageSize = 1000): Promise<T[]> {
+  const out: T[] = [];
+  let offset = 0;
+  const join = path.includes("?") ? "&" : "?";
+  for (;;) {
+    const pagePath = `${path}${join}limit=${pageSize}&offset=${offset}`;
+    const chunk = await rest<T[]>(pagePath);
+    out.push(...chunk);
+    if (chunk.length === 0 || chunk.length < pageSize) break;
+    offset += pageSize;
+    // Safety: avoid runaway loops on a misbehaving API.
+    if (offset > 200_000) break;
+  }
+  return out;
 }
 
 export function isSuppressed(performance: Pick<CatalogPerformance, "source">): boolean {
@@ -390,8 +426,8 @@ export async function getProduction(
 export async function listPerformances(
   productionId: string,
 ): Promise<CatalogPerformance[]> {
-  return rest<CatalogPerformance[]>(
-    `catalog_performances?production_id=eq.${encodeURIComponent(productionId)}&select=id,production_id,starts_at,venue_name,venue_address,venue_city,source&order=starts_at.asc&limit=10000`,
+  return restAll<CatalogPerformance>(
+    `catalog_performances?production_id=eq.${encodeURIComponent(productionId)}&select=id,production_id,starts_at,venue_name,venue_address,venue_city,source&order=starts_at.asc`,
   );
 }
 
@@ -501,8 +537,8 @@ export async function listVenueRuns(
 
 /** All touring stands — used to render count summaries on the catalog list. */
 export async function listAllVenueRuns(): Promise<CatalogVenueRun[]> {
-  return rest<CatalogVenueRun[]>(
-    `catalog_venue_runs?select=id,production_id,city,venue_name,start_date,end_date,ticket_url,source,sort_index&order=start_date.asc&limit=20000`,
+  return restAll<CatalogVenueRun>(
+    `catalog_venue_runs?select=id,production_id,city,venue_name,start_date,end_date,ticket_url,source,sort_index&order=start_date.asc`,
   );
 }
 
@@ -518,29 +554,23 @@ export async function listTouringVenueStats(
   if (productionIds.length === 0) return stats;
 
   // Chunk IN filters — PostgREST URL length limits.
+  // Paginate each chunk: PostgREST max-rows is 1000 even when limit is higher.
   const chunkSize = 40;
   for (let i = 0; i < productionIds.length; i += chunkSize) {
     const chunk = productionIds.slice(i, i + chunkSize);
     const filter = chunk.map(encodeURIComponent).join(",");
-    const rows = await rest<
-      Array<{
-        production_id: string;
-        venue_name: string | null;
-        venue_city: string | null;
-        starts_at: string;
-        source: string;
-      }>
-    >(
-      `catalog_performances?production_id=in.(${filter})&select=production_id,venue_name,venue_city,starts_at,source&limit=50000`,
+    const rows = await restAll<{
+      production_id: string;
+      venue_name: string | null;
+      venue_city: string | null;
+      starts_at: string;
+      source: string;
+    }>(
+      `catalog_performances?production_id=in.(${filter})&select=production_id,venue_name,venue_city,starts_at,source`,
     );
     const venuesByProd = new Map<string, Set<string>>();
     for (const row of rows) {
       if (row.source === ADMIN_SUPPRESSED_SOURCE) continue;
-      const name = (row.venue_name ?? "").trim();
-      if (!name) continue;
-      const set = venuesByProd.get(row.production_id) ?? new Set<string>();
-      set.add(venueKey(name, row.venue_city));
-      venuesByProd.set(row.production_id, set);
 
       const ymd = new Intl.DateTimeFormat("en-CA", {
         timeZone: LONDON_TZ,
@@ -557,6 +587,12 @@ export async function listTouringVenueStats(
       if (!current.startDate || ymd < current.startDate) current.startDate = ymd;
       if (!current.endDate || ymd > current.endDate) current.endDate = ymd;
       stats.set(row.production_id, current);
+
+      const name = (row.venue_name ?? "").trim();
+      if (!name) continue;
+      const set = venuesByProd.get(row.production_id) ?? new Set<string>();
+      set.add(venueKey(name, row.venue_city));
+      venuesByProd.set(row.production_id, set);
     }
     for (const [id, set] of venuesByProd) {
       const current = stats.get(id);

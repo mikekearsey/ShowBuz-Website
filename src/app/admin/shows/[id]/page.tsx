@@ -99,13 +99,11 @@ function standMonthHref(productionId: string, run: CatalogVenueRun): string {
 function CalendarGrid({
   cells,
   byDay,
-  touring,
   productionId,
   monthConfirmed,
 }: {
   cells: Array<{ day: number | null; ymd: string | null }>;
   byDay: Map<string, CatalogPerformance[]>;
-  touring: boolean;
   productionId: string;
   monthConfirmed: boolean;
 }) {
@@ -118,35 +116,44 @@ function CalendarGrid({
       ))}
       {cells.map((cell, index) => {
         const curtains = cell.ymd ? (byDay.get(cell.ymd) ?? []) : [];
+        const multi = curtains.length >= 2;
+        const dayVenue = (() => {
+          const first = curtains[0];
+          if (!first?.venue_name?.trim()) return null;
+          return [first.venue_name.trim(), first.venue_city?.trim() || null]
+            .filter(Boolean)
+            .join(", ");
+        })();
         return (
           <div
             key={`${cell.ymd ?? "empty"}-${index}`}
-            className={`admin-cal-day${cell.day ? "" : " empty"}`}
+            className={`admin-cal-day${cell.day ? "" : " empty"}${multi ? " multi" : ""}`}
           >
             {cell.day ? <span className="admin-cal-num">{cell.day}</span> : null}
-            {curtains.map((curtain) => (
-              <div
-                key={curtain.id}
-                className={`admin-curtain${isAdminLocked(curtain) ? " locked" : ""}`}
-              >
-                <span className="admin-curtain-time">
-                  {formatLondonTime(curtain.starts_at)}
-                </span>
-                {touring || curtain.venue_name ? (
-                  <span className="admin-curtain-venue">
-                    {curtain.venue_name}
-                    {curtain.venue_city ? `, ${curtain.venue_city}` : ""}
+            <div className="admin-cal-curtains">
+              {curtains.map((curtain) => (
+                <div
+                  key={curtain.id}
+                  className={`admin-curtain${isAdminLocked(curtain) ? " locked" : ""}`}
+                >
+                  <span className="admin-curtain-time">
+                    {formatLondonTime(curtain.starts_at)}
                   </span>
-                ) : null}
-                <form action={deleteCurtainAction}>
-                  <input type="hidden" name="productionId" value={productionId} />
-                  <input type="hidden" name="curtainId" value={curtain.id} />
-                  <button type="submit" className="admin-tiny">
-                    Remove
-                  </button>
-                </form>
-              </div>
-            ))}
+                  <form action={deleteCurtainAction}>
+                    <input type="hidden" name="productionId" value={productionId} />
+                    <input type="hidden" name="curtainId" value={curtain.id} />
+                    <button type="submit" className="admin-tiny">
+                      Remove
+                    </button>
+                  </form>
+                </div>
+              ))}
+            </div>
+            {dayVenue ? (
+              <span className="admin-cal-day-venue" title={dayVenue}>
+                {dayVenue}
+              </span>
+            ) : null}
           </div>
         );
       })}
@@ -190,15 +197,16 @@ export default async function AdminShowPage({
       })
     : null;
 
-  const activeVenue = touring
-    ? (query.venue
-        ? venueRuns.find((run) => run.id === query.venue) ?? null
-        : venueRuns[0] ?? null)
+  // LHS venue click jumps the calendar to that stand's month and highlights the
+  // row. Month prev/next never keeps a venue filter — always show every curtain
+  // in the month in view.
+  const selectedVenue = touring && query.venue
+    ? venueRuns.find((run) => run.id === query.venue) ?? null
     : null;
 
   const fallback =
-    activeVenue?.start_date
-      ? `${activeVenue.start_date}T12:00:00Z`
+    selectedVenue?.start_date
+      ? `${selectedVenue.start_date}T12:00:00Z`
       : visible[0]?.starts_at ??
         (production.run_start_date
           ? `${production.run_start_date}T12:00:00Z`
@@ -209,9 +217,9 @@ export default async function AdminShowPage({
   if (query.month && /^\d{4}-\d{2}$/.test(query.month)) {
     year = Number(query.month.slice(0, 4));
     month = Number(query.month.slice(5, 7));
-  } else if (activeVenue?.start_date) {
-    year = Number(activeVenue.start_date.slice(0, 4));
-    month = Number(activeVenue.start_date.slice(5, 7));
+  } else if (selectedVenue?.start_date) {
+    year = Number(selectedVenue.start_date.slice(0, 4));
+    month = Number(selectedVenue.start_date.slice(5, 7));
   }
 
   const byDay = new Map<string, CatalogPerformance[]>();
@@ -221,6 +229,9 @@ export default async function AdminShowPage({
     list.push(row);
     byDay.set(ymd, list);
   }
+  for (const list of byDay.values()) {
+    list.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+  }
 
   const prev = shiftMonth(year, month, -1);
   const next = shiftMonth(year, month, 1);
@@ -228,7 +239,6 @@ export default async function AdminShowPage({
   const yearMonth = `${year}-${String(month).padStart(2, "0")}`;
   const monthConfirmed = (production.admin_locked_months ?? []).includes(yearMonth);
   const finish = production.run_end_date;
-  const venueQuery = activeVenue ? `&venue=${encodeURIComponent(activeVenue.id)}` : "";
 
   const calendarPane = (
     <div className="admin-tour-calendar">
@@ -250,14 +260,15 @@ export default async function AdminShowPage({
       </section>
 
       <nav className="admin-month-nav">
-        <Link href={`/admin/shows/${id}?month=${prev.year}-${String(prev.month).padStart(2, "0")}${venueQuery}`}>
+        <Link
+          href={`/admin/shows/${id}?month=${prev.year}-${String(prev.month).padStart(2, "0")}`}
+        >
           Previous
         </Link>
-        <h2>
-          {monthLabel(year, month)}
-          {activeVenue ? ` · ${venueRunTitle(activeVenue)}` : ""}
-        </h2>
-        <Link href={`/admin/shows/${id}?month=${next.year}-${String(next.month).padStart(2, "0")}${venueQuery}`}>
+        <h2>{monthLabel(year, month)}</h2>
+        <Link
+          href={`/admin/shows/${id}?month=${next.year}-${String(next.month).padStart(2, "0")}`}
+        >
           Next
         </Link>
       </nav>
@@ -273,7 +284,6 @@ export default async function AdminShowPage({
       <CalendarGrid
         cells={cells}
         byDay={byDay}
-        touring={touring}
         productionId={production.id}
         monthConfirmed={monthConfirmed}
       />
@@ -339,7 +349,7 @@ export default async function AdminShowPage({
             <p className="admin-footnote">{touringSummary ?? "Tour itinerary"}</p>
             <ul className="admin-itinerary-list">
               {venueRuns.map((run) => {
-                const active = activeVenue?.id === run.id;
+                const active = selectedVenue?.id === run.id;
                 return (
                   <li key={run.id}>
                     <Link
@@ -386,7 +396,7 @@ export default async function AdminShowPage({
               required={touring}
               defaultValue={
                 touring
-                  ? activeVenue?.venue_name ?? ""
+                  ? selectedVenue?.venue_name ?? ""
                   : (production.venue_summary ?? "")
               }
             />
@@ -396,7 +406,7 @@ export default async function AdminShowPage({
             <input
               type="text"
               name="venueCity"
-              defaultValue={touring ? activeVenue?.city ?? "" : ""}
+              defaultValue={touring ? selectedVenue?.city ?? "" : ""}
             />
           </label>
           <label className="wide">
