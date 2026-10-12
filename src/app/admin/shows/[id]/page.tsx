@@ -4,10 +4,10 @@ import { notFound, redirect } from "next/navigation";
 import {
   addCurtainAction,
   confirmMonthAction,
-  deleteCurtainAction,
   logoutAction,
   restoreCurtainAction,
 } from "../../actions";
+import { CurtainRow } from "@/components/admin/CurtainRow";
 import { RefreshScrapeDialog } from "@/components/admin/RefreshScrapeDialog";
 import {
   formatTouringVenueSummaryFromRuns,
@@ -132,21 +132,13 @@ function CalendarGrid({
             {cell.day ? <span className="admin-cal-num">{cell.day}</span> : null}
             <div className="admin-cal-curtains">
               {curtains.map((curtain) => (
-                <div
+                <CurtainRow
                   key={curtain.id}
-                  className={`admin-curtain${isAdminLocked(curtain) ? " locked" : ""}`}
-                >
-                  <span className="admin-curtain-time">
-                    {formatLondonTime(curtain.starts_at)}
-                  </span>
-                  <form action={deleteCurtainAction}>
-                    <input type="hidden" name="productionId" value={productionId} />
-                    <input type="hidden" name="curtainId" value={curtain.id} />
-                    <button type="submit" className="admin-tiny">
-                      Remove
-                    </button>
-                  </form>
-                </div>
+                  productionId={productionId}
+                  curtainId={curtain.id}
+                  startsAt={curtain.starts_at}
+                  locked={isAdminLocked(curtain)}
+                />
               ))}
             </div>
             {dayVenue ? (

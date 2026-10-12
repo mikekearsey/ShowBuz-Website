@@ -39,6 +39,38 @@ export function formatLondonTime(iso: string): string {
   }).format(new Date(iso));
 }
 
+/** "7:30pm" and "Sat 14 Nov" for the curtain remove control. */
+export function formatCurtainRemoveWhen(iso: string): { time: string; date: string } {
+  const date = new Date(iso);
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: LONDON_TZ,
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).formatToParts(date);
+  const hour = parts.find((part) => part.type === "hour")?.value ?? "";
+  const minute = parts.find((part) => part.type === "minute")?.value ?? "00";
+  const period = (parts.find((part) => part.type === "dayPeriod")?.value ?? "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+  const weekday = new Intl.DateTimeFormat("en-GB", {
+    timeZone: LONDON_TZ,
+    weekday: "short",
+  }).format(date);
+  const day = new Intl.DateTimeFormat("en-GB", {
+    timeZone: LONDON_TZ,
+    day: "numeric",
+  }).format(date);
+  const month = new Intl.DateTimeFormat("en-GB", {
+    timeZone: LONDON_TZ,
+    month: "short",
+  }).format(date);
+  return {
+    time: `${hour}:${minute}${period}`,
+    date: `${weekday} ${day} ${month}`,
+  };
+}
+
 export function londonTodayYmd(): string {
   return londonYmd(new Date().toISOString());
 }

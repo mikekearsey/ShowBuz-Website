@@ -782,15 +782,15 @@ body {
 /* One-screen month: shrink day cells to the viewport, no vertical page scroll. */
 .admin-cal.fit-page {
   margin-bottom: 12px;
-  height: min(72vh, calc(100dvh - 220px));
-  grid-auto-rows: minmax(0, 1fr);
+  height: auto;
+  grid-auto-rows: minmax(4.5rem, auto);
 }
 
 .admin-cal.fit-page .admin-cal-head,
 .admin-cal.fit-page .admin-cal-day {
-  min-height: 0;
+  min-height: 4.5rem;
   padding: 4px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .admin-cal.fit-page .admin-cal-day {
@@ -803,8 +803,12 @@ body {
   flex-direction: column;
   gap: 2px;
   min-height: 0;
-  flex: 0 1 auto;
-  overflow: hidden;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.admin-cal.fit-page .admin-cal-day.multi {
+  overflow: visible;
 }
 
 .admin-cal.fit-page .admin-curtain {
@@ -917,7 +921,7 @@ body {
 }
 
 .admin-cal.fit-page {
-  height: min(68vh, calc(100dvh - 260px));
+  height: auto;
 }
 
 @media (max-width: 900px) {
@@ -965,8 +969,126 @@ body {
   background: #e8f1ff;
 }
 
+.admin-curtain-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  min-width: 0;
+}
+
 .admin-curtain-time {
   font-weight: 700;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.admin-app button.admin-curtain-x {
+  position: relative;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #b42318;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-app button.admin-curtain-x::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border: 1px solid #e4b4ae;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.admin-app button.admin-curtain-x span {
+  position: relative;
+  z-index: 1;
+}
+
+.admin-app button.admin-curtain-x:hover::before {
+  border-color: #b42318;
+  background: #fdf6f5;
+}
+
+.admin-app button.admin-curtain-x:focus-visible {
+  outline: 2px solid #1a1a1a;
+  outline-offset: 2px;
+}
+
+.admin-curtain-confirm {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  margin-top: 2px;
+}
+
+.admin-curtain-confirm-q {
+  margin: 0;
+  color: #1a1a1a;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: normal;
+}
+
+.admin-curtain-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-curtain-confirm-form {
+  display: inline;
+  margin: 0;
+}
+
+.admin-app button.admin-curtain-remove-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: #1a1a1a;
+  color: #fff;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.admin-app button.admin-curtain-cancel {
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #666;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-app button.admin-curtain-cancel:hover,
+.admin-app button.admin-curtain-cancel:focus-visible {
+  background: transparent;
+  color: #1a1a1a;
+  text-decoration: underline;
+  outline: 2px solid #1a1a1a;
+  outline-offset: 2px;
 }
 
 .admin-cal-day-venue {
