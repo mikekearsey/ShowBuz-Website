@@ -6,7 +6,7 @@ import { adminCookieName, readAdminEmail } from "@/lib/admin/session";
 export default async function AdminResidentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; rejected?: string }>;
 }) {
   const jar = await cookies();
   const email = await readAdminEmail(jar.get(adminCookieName)?.value);
@@ -14,6 +14,11 @@ export default async function AdminResidentPage({
 
   const query = await searchParams;
   return (
-    <CatalogShowsList kind="resident" status={query.status} email={email} />
+    <CatalogShowsList
+      kind="resident"
+      status={query.status}
+      showRejected={query.rejected === "show"}
+      email={email}
+    />
   );
 }

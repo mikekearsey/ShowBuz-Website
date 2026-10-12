@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { logoutAction } from "@/app/admin/actions";
+import { AdminKindTabs } from "@/components/admin/AdminKindTabs";
+import styles from "@/components/admin/catalog-review.module.css";
 import { ScrapeStatusDetail } from "@/components/admin/ScrapeStatusDetail";
 import {
   catalogHasFutureDates,
@@ -15,7 +17,23 @@ import {
   type CatalogVenueRun,
   type TouringVenueStats,
 } from "@/lib/admin/catalog";
+import {
+  loadCatalogReview,
+  rejectedAsProduction,
+  type CatalogReviewSnapshot,
+} from "@/lib/admin/catalog-review";
 import { formatAdminDate, londonTodayYmd } from "@/lib/admin/london";
+
+function listHref(
+  path: string,
+  opts: { status?: string; rejected?: boolean },
+): string {
+  const params = new URLSearchParams();
+  if (opts.status) params.set("status", opts.status);
+  if (opts.rejected) params.set("rejected", "show");
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
+}
 
 const FILTERS: Array<{ id: CatalogScrapeFilter; label: string }> = [
   { id: "all", label: "All" },
@@ -24,9 +42,7 @@ const FILTERS: Array<{ id: CatalogScrapeFilter; label: string }> = [
   { id: "error", label: "Error" },
   { id: "pending", label: "Not scraped" },
   { id: "ignored", label: "Ignored" },
-  { id: "archived", label: "Archived" },
 ];
-
 const KIND_COPY: Record<
   CatalogListingKind,
   { title: string; lead: string; otherHref: string; otherLabel: string }
@@ -99,6 +115,14 @@ function isArchivedShow(
   if (show.scrape_status === "ignored") return false;
   const runs = runsByProduction.get(show.id) ?? [];
   const stats = statsByProduction.get(show.id);
+  // Prefer diary evidence over a stale empty flag (thin re-scrapes used to
+  // flip status to empty while leaving catalog_performances intact).
+  if (
+    show.scrape_status === "empty" &&
+    !(stats?.endDate || runs.length > 0)
+  ) {
+    return true;
+  }
   return !catalogHasFutureDates(show, {
     todayYmd,
     venueRunEndDates: runs.map((run) => run.end_date),
@@ -109,15 +133,38 @@ function isArchivedShow(
 export async function CatalogShowsList({
   kind,
   status,
+  showRejected = false,
   email,
 }: {
   kind: CatalogListingKind;
   status?: string;
+  showRejected?: boolean;
   email: string;
 }) {
   const filter = parseScrapeFilter(status);
   const todayYmd = londonTodayYmd();
-  const productions = await listProductions();
+  const [listed, review] = await Promise.all([
+    listProductions(),
+    loadCatalogReview().catch(() => ({ available: false }) as CatalogReviewSnapshot),
+  ]);
+  let productions = listed;
+  const needsReviewIds = new Set(review.available ? review.needsReviewIds : []);
+  const rejectedIds = new Set<string>();
+  if (review.available) {
+    for (const row of review.rejected) {
+      if (row.listing_kind === kind) rejectedIds.add(row.id);
+    }
+    if (!showRejected) {
+      productions = productions.filter((show) => !rejectedIds.has(show.id));
+    } else {
+      const have = new Set(productions.map((show) => show.id));
+      for (const row of review.rejected) {
+        if (have.has(row.id)) continue;
+        const production = rejectedAsProduction(row);
+        if (production) productions.push(production);
+      }
+    }
+  }
   const kindShows = productions.filter((show) => show.listing_kind === kind);
   const [venueRuns, performanceStats] = await Promise.all([
     kind === "touring" ? listAllVenueRuns() : Promise.resolve([] as CatalogVenueRun[]),
@@ -147,6 +194,9 @@ export async function CatalogShowsList({
 
   const copy = KIND_COPY[kind];
   const basePath = kind === "resident" ? "/admin/resident" : "/admin/touring";
+  const reviewCount = review.available && review.rpc ? review.queue.length : null;
+  const statusForLinks = filter === "all" ? undefined : filter;
+  const rejectedCount = rejectedIds.size;
 
   return (
     <main>
@@ -163,50 +213,83 @@ export async function CatalogShowsList({
         </form>
       </header>
 
-      <nav className="admin-kind-tabs" aria-label="Show kind">
-        <Link
-          href="/admin/resident"
-          className={
-            kind === "resident" ? "admin-kind-tab active" : "admin-kind-tab"
-          }
-        >
-          Resident
-        </Link>
-        <Link
-          href="/admin/touring"
-          className={
-            kind === "touring" ? "admin-kind-tab active" : "admin-kind-tab"
-          }
-        >
-          Touring
-        </Link>
-      </nav>
+      <div className="admin-list-nav">
+        <AdminKindTabs
+          active={kind}
+          reviewCount={reviewCount}
+          residentHref={listHref("/admin/resident", {
+            status: filter === "archived" ? "archived" : undefined,
+            rejected: showRejected,
+          })}
+          touringHref={listHref("/admin/touring", {
+            status: filter === "archived" ? "archived" : undefined,
+            rejected: showRejected,
+          })}
+        />
 
-      <nav className="admin-filters" aria-label="Filter by scrape status">
-        {FILTERS.map((item) => {
-          const count =
-            item.id === "all"
-              ? activeShows.length
-              : item.id === "archived"
-                ? archivedShows.length
+        <nav className="admin-kind-tabs" aria-label="Active or archived">
+          <Link
+            href={listHref(basePath, { rejected: showRejected })}
+            className={
+              filter !== "archived" ? "admin-kind-tab active" : "admin-kind-tab"
+            }
+          >
+            Active
+            <span className="admin-kind-tab-count">{activeShows.length}</span>
+          </Link>
+          <Link
+            href={listHref(basePath, { status: "archived", rejected: showRejected })}
+            className={
+              filter === "archived" ? "admin-kind-tab active" : "admin-kind-tab"
+            }
+          >
+            Archived
+            <span className="admin-kind-tab-count">{archivedShows.length}</span>
+          </Link>
+        </nav>
+      </div>
+
+      {review.available && (rejectedCount > 0 || showRejected) ? (
+        <p className="admin-filters">
+          <Link
+            href={listHref(basePath, {
+              status: statusForLinks,
+              rejected: !showRejected,
+            })}
+            className={showRejected ? "admin-filter active" : "admin-filter"}
+          >
+            {showRejected ? "Hide rejected" : "Show rejected"}
+            <span>{rejectedCount}</span>
+          </Link>
+        </p>
+      ) : null}
+
+      {filter === "archived" ? null : (
+        <nav className="admin-filters" aria-label="Filter by scrape status">
+          {FILTERS.map((item) => {
+            const count =
+              item.id === "all"
+                ? activeShows.length
                 : activeShows.filter((show) => show.scrape_status === item.id)
                     .length;
-          const href =
-            item.id === "all" ? basePath : `${basePath}?status=${item.id}`;
-          const active = filter === item.id;
-          return (
-            <Link
-              key={item.id}
-              href={href}
-              className={active ? "admin-filter active" : "admin-filter"}
-            >
-              {item.label}
-              <span>{count}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
+            const href = listHref(basePath, {
+              status: item.id === "all" ? undefined : item.id,
+              rejected: showRejected,
+            });
+            const active = filter === item.id;
+            return (
+              <Link
+                key={item.id}
+                href={href}
+                className={active ? "admin-filter active" : "admin-filter"}
+              >
+                {item.label}
+                <span>{count}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
       {filter === "archived" ? (
         <p className="admin-footnote">
           Shows with no nights on or after today. They return to the main list
@@ -230,6 +313,9 @@ export async function CatalogShowsList({
               <tr key={show.id}>
                 <td>
                   <Link href={`/admin/shows/${show.id}`}>{show.name}</Link>
+                  {needsReviewIds.has(show.id) ? (
+                    <span className={styles.badge}>Needs review</span>
+                  ) : null}
                 </td>
                 <td>
                   {venueSummaryForShow(
@@ -258,6 +344,9 @@ export async function CatalogShowsList({
           : ` with status “${filter}”`}
         {filter !== "archived" && archivedShows.length
           ? ` · ${archivedShows.length} archived`
+          : ""}
+        {!showRejected && rejectedCount
+          ? ` · ${rejectedCount} rejected hidden`
           : ""}
         . <Link href={copy.otherHref}>Switch to {copy.otherLabel}</Link>.
       </p>

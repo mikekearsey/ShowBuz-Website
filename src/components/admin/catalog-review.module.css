@@ -1,0 +1,82 @@
+:global(.admin-table).table :global(th),
+:global(.admin-table).table :global(td) {
+  white-space: normal;
+  vertical-align: top;
+}
+
+.show {
+  min-width: 14rem;
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #f3e6c8;
+  color: #7a5b00;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
+.reason {
+  display: block;
+  max-width: 28em;
+  margin-top: 4px;
+  color: #666;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: normal;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.note {
+  width: 11rem;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+}
+
+:global(.admin-app) button.yes {
+  background: #157347;
+  padding: 6px 12px;
+}
+
+:global(.admin-app) button.no {
+  background: #fff;
+  color: #b42318;
+  border: 1px solid #e7c4c0;
+  padding: 6px 12px;
+}
+
+:global(.admin-app) button.undo {
+  background: transparent;
+  color: #1a1a1a;
+  border: 1px solid #ccc;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.section {
+  margin-top: 28px;
+}
+
+.section h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.empty {
+  margin: 0;
+  color: #555;
+}

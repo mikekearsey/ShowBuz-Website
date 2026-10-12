@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
@@ -13,6 +14,11 @@ import {
   suppressCurtain,
   type RefreshShowResult,
 } from "@/lib/admin/catalog";
+import {
+  isReviewSchemaMissing,
+  setCatalogReviewStatus,
+  type CatalogReviewStatus,
+} from "@/lib/admin/catalog-review";
 import { adminCookieName, createAdminToken, isAllowedAdminEmail } from "@/lib/admin/session";
 
 async function requireConfiguredAdmin(email: string) {
@@ -129,6 +135,35 @@ export async function confirmMonthAction(formData: FormData) {
     redirect(`/admin/shows/${productionId}?month=${yearMonth}&error=confirm`);
   }
   redirect(`/admin/shows/${productionId}?month=${yearMonth}&ok=confirm`);
+}
+
+const REVIEW_STATUSES = new Set<CatalogReviewStatus>([
+  "approved",
+  "needs_review",
+  "rejected",
+]);
+
+export async function setCatalogReviewAction(formData: FormData) {
+  const id = String(formData.get("productionId") ?? "").trim();
+  const status = String(formData.get("status") ?? "").trim();
+  const reasonRaw = String(formData.get("reason") ?? "").trim();
+  const reason = reasonRaw ? reasonRaw.slice(0, 500) : null;
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ||
+    !REVIEW_STATUSES.has(status as CatalogReviewStatus)
+  ) {
+    redirect("/admin/review?error=review");
+  }
+  try {
+    await setCatalogReviewStatus(id, status as CatalogReviewStatus, reason);
+  } catch (error) {
+    if (isReviewSchemaMissing(error)) redirect("/admin/resident");
+    redirect("/admin/review?error=review");
+  }
+  revalidatePath("/admin/review");
+  revalidatePath("/admin/resident");
+  revalidatePath("/admin/touring");
+  redirect("/admin/review?ok=review");
 }
 
 export async function refreshShowWithProgress(
