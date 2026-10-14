@@ -2,6 +2,7 @@ import Link from "next/link";
 import { logoutAction } from "@/app/admin/actions";
 import { AdminKindTabs } from "@/components/admin/AdminKindTabs";
 import styles from "@/components/admin/catalog-review.module.css";
+import { OfficialTourLink } from "@/components/admin/OfficialTourLink";
 import { ScrapeStatusDetail } from "@/components/admin/ScrapeStatusDetail";
 import {
   catalogHasFutureDates,
@@ -17,6 +18,14 @@ import {
   type CatalogVenueRun,
   type TouringVenueStats,
 } from "@/lib/admin/catalog";
+import {
+  coverageFromRuns,
+  loadTourCoverage,
+  tourIsRechecking,
+  type TourCoverage,
+  type TourCoverageSnapshot,
+} from "@/lib/admin/coverage";
+import { formatStopCoverage } from "@/lib/admin/labels";
 import {
   loadCatalogReview,
   rejectedAsProduction,
@@ -166,10 +175,15 @@ export async function CatalogShowsList({
     }
   }
   const kindShows = productions.filter((show) => show.listing_kind === kind);
-  const [venueRuns, performanceStats] = await Promise.all([
+  const [venueRuns, performanceStats, coverage] = await Promise.all([
     kind === "touring" ? listAllVenueRuns() : Promise.resolve([] as CatalogVenueRun[]),
     // Need end dates for archive detection on both kinds when possible.
     listTouringVenueStats(kindShows.map((show) => show.id)),
+    kind === "touring"
+      ? loadTourCoverage().catch(
+          () => ({ available: false, byId: new Map<string, TourCoverage>() }) as TourCoverageSnapshot,
+        )
+      : Promise.resolve({ available: true, byId: new Map<string, TourCoverage>() } as TourCoverageSnapshot),
   ]);
   const runsByProduction = new Map<string, CatalogVenueRun[]>();
   for (const run of venueRuns) {
@@ -303,13 +317,30 @@ export async function CatalogShowsList({
             <tr>
               <th>Show</th>
               <th>Venue / summary</th>
-              <th>Start</th>
-              <th>Finish</th>
+              {kind === "touring" ? <th>First curtain</th> : <th>Start</th>}
+              {kind === "touring" ? <th>Last curtain</th> : <th>Finish</th>}
+              {kind === "touring" ? <th>Coverage</th> : null}
+              {kind === "touring" ? <th>Official page</th> : null}
               <th>Scrape</th>
             </tr>
           </thead>
           <tbody>
-            {visible.map((show) => (
+            {visible.map((show) => {
+              const stats = performanceStats.get(show.id);
+              const cov = coverage.byId.get(show.id);
+              const dbTimed = cov?.tourStopsTimed ?? null;
+              const dbFuture = cov?.tourStopsFuture ?? null;
+              const derived =
+                kind === "touring" && dbTimed == null && dbFuture == null
+                  ? coverageFromRuns(runsByProduction.get(show.id) ?? [], todayYmd)
+                  : null;
+              const timed = dbTimed ?? derived?.timed ?? null;
+              const future = dbFuture ?? derived?.future ?? null;
+              const firstCurtain =
+                kind === "touring" ? stats?.startDate ?? null : show.run_start_date;
+              const lastCurtain =
+                kind === "touring" ? stats?.endDate ?? null : show.run_end_date;
+              return (
               <tr key={show.id}>
                 <td>
                   <Link href={`/admin/shows/${show.id}`}>{show.name}</Link>
@@ -325,13 +356,27 @@ export async function CatalogShowsList({
                     performanceStats,
                   )}
                 </td>
-                <td>{formatAdminDate(show.run_start_date)}</td>
-                <td>{formatAdminDate(show.run_end_date)}</td>
+                <td>{formatAdminDate(firstCurtain)}</td>
+                <td>{formatAdminDate(lastCurtain)}</td>
+                {kind === "touring" ? (
+                  <td>{formatStopCoverage(timed, future)}</td>
+                ) : null}
+                {kind === "touring" ? (
+                  <td className="wrap">
+                    <OfficialTourLink
+                      productionId={show.id}
+                      url={cov?.officialTourUrl ?? null}
+                      source={cov?.officialTourUrlSource ?? null}
+                      rechecking={cov ? tourIsRechecking(cov) : false}
+                    />
+                  </td>
+                ) : null}
                 <td>
                   <ScrapeStatusDetail production={show} />
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -350,6 +395,11 @@ export async function CatalogShowsList({
           : ""}
         . <Link href={copy.otherHref}>Switch to {copy.otherLabel}</Link>.
       </p>
+      {kind === "touring" && !coverage.available ? (
+        <p className="admin-footnote">
+          Coverage counts and official tour pages are not available on this server yet.
+        </p>
+      ) : null}
     </main>
   );
 }

@@ -8,7 +8,9 @@ import {
   restoreCurtainAction,
 } from "../../actions";
 import { CurtainRow } from "@/components/admin/CurtainRow";
+import { OfficialTourLink } from "@/components/admin/OfficialTourLink";
 import { RefreshScrapeDialog } from "@/components/admin/RefreshScrapeDialog";
+import { TourStops } from "@/components/admin/TourStops";
 import {
   formatTouringVenueSummaryFromRuns,
   getProduction,
@@ -22,6 +24,8 @@ import {
   type CatalogPerformance,
   type CatalogVenueRun,
 } from "@/lib/admin/catalog";
+import { loadTourCoverage, tourIsRechecking, type TourCoverage } from "@/lib/admin/coverage";
+import { formatStopCoverage } from "@/lib/admin/labels";
 import { formatAdminDate, formatAdminDateTime, formatLondonTime, londonYmd, londonYearMonth } from "@/lib/admin/london";
 import { adminCookieName, readAdminEmail } from "@/lib/admin/session";
 
@@ -169,10 +173,17 @@ export default async function AdminShowPage({
   const production = await getProduction(id);
   if (!production) notFound();
 
-  const [performances, storedVenueRuns] = await Promise.all([
+  const [performances, storedVenueRuns, coverageSnap] = await Promise.all([
     listPerformances(id),
     production.listing_kind === "touring" ? listVenueRuns(id) : Promise.resolve([] as CatalogVenueRun[]),
+    production.listing_kind === "touring"
+      ? loadTourCoverage(id).catch(() => ({
+          available: false,
+          byId: new Map<string, TourCoverage>(),
+        }))
+      : Promise.resolve({ available: true, byId: new Map<string, TourCoverage>() }),
   ]);
+  const coverage = coverageSnap.byId.get(id) ?? null;
   const visible = performances.filter((row) => !isSuppressed(row));
   const suppressed = performances.filter((row) => isSuppressed(row));
   const touring = production.listing_kind === "touring";
@@ -304,6 +315,11 @@ export default async function AdminShowPage({
                 : null}
             Catalog run {formatAdminDate(production.run_start_date)} to{" "}
             {formatAdminDate(production.run_end_date)}.{" "}
+            {coverage &&
+            coverage.tourStopsTimed != null &&
+            coverage.tourStopsFuture != null
+              ? `${formatStopCoverage(coverage.tourStopsTimed, coverage.tourStopsFuture)}. `
+              : ""}
             {touring && production.scrape_status === "empty"
               ? "No published tour dates"
               : `Scrape ${scrapeStatusLabel(production)}`}
@@ -314,6 +330,19 @@ export default async function AdminShowPage({
           </p>
           {production.scrape_error ? (
             <p className="admin-footnote">Last scrape note: {production.scrape_error}</p>
+          ) : null}
+          {touring ? (
+            <OfficialTourLink
+              productionId={production.id}
+              url={coverage?.officialTourUrl ?? null}
+              source={coverage?.officialTourUrlSource ?? null}
+              rechecking={coverage ? tourIsRechecking(coverage) : false}
+            />
+          ) : null}
+          {touring && !coverageSnap.available ? (
+            <p className="admin-footnote">
+              The official tour page is not available on this server yet.
+            </p>
           ) : null}
         </div>
         <form action={logoutAction}>
@@ -333,6 +362,8 @@ export default async function AdminShowPage({
           {errorNotice(query.error)}
         </p>
       ) : null}
+
+      {touring ? <TourStops productionId={production.id} runs={venueRuns} /> : null}
 
       {touring && venueRuns.length > 0 ? (
         <div className="admin-tour-split">

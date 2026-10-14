@@ -19,7 +19,27 @@ import {
   setCatalogReviewStatus,
   type CatalogReviewStatus,
 } from "@/lib/admin/catalog-review";
-import { adminCookieName, createAdminToken, isAllowedAdminEmail } from "@/lib/admin/session";
+import {
+  applySourceOverride,
+  confirmVenue,
+  hideFlaggedNight,
+  isUuid,
+  keepFlaggedNight,
+  loadTourCoverage,
+  previewSourceUrl,
+  setOfficialTourUrl,
+  tourIsRechecking,
+  updateVenueDetails,
+} from "@/lib/admin/coverage";
+import { plainAdminError } from "@/lib/admin/schema";
+import { adminCookieName, createAdminToken, isAllowedAdminEmail, readAdminEmail } from "@/lib/admin/session";
+
+async function requireAdminEmail(): Promise<string> {
+  const jar = await cookies();
+  const email = await readAdminEmail(jar.get(adminCookieName)?.value);
+  if (!email) throw new Error("Sign in required.");
+  return email;
+}
 
 async function requireConfiguredAdmin(email: string) {
   if (!isAllowedAdminEmail(email)) {
@@ -194,4 +214,136 @@ export async function refreshShowWithProgress(
       error: error instanceof Error ? error.message : "Refresh failed.",
     };
   }
+}
+
+export async function setOfficialTourUrlAction(
+  productionId: string,
+  url: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await requireAdminEmail();
+    await setOfficialTourUrl(productionId, url);
+  } catch (error) {
+    return { ok: false, error: plainAdminError(error) };
+  }
+  revalidatePath("/admin/touring");
+  revalidatePath(`/admin/shows/${productionId}`);
+  return { ok: true };
+}
+
+export async function tourRecheckStatusAction(
+  productionId: string,
+): Promise<{ done: boolean }> {
+  try {
+    await requireAdminEmail();
+  } catch {
+    return { done: false };
+  }
+  if (!isUuid(productionId)) return { done: true };
+  try {
+    const snap = await loadTourCoverage(productionId);
+    const row = snap.byId.get(productionId);
+    if (!snap.available || !row) return { done: true };
+    return { done: !tourIsRechecking(row) };
+  } catch {
+    return { done: true };
+  }
+}
+
+export async function previewSourceAction(input: {
+  url: string;
+  stop: { city: string; venueName: string; startDate: string; endDate: string };
+}): Promise<
+  | { ok: true; source: string | null; curtains: Array<{ date: string; time: string }> }
+  | { ok: false; error: string }
+> {
+  try {
+    await requireAdminEmail();
+    const preview = await previewSourceUrl(input);
+    return { ok: true, source: preview.source, curtains: preview.curtains };
+  } catch (error) {
+    return { ok: false, error: plainAdminError(error) };
+  }
+}
+
+export async function applySourceOverrideAction(input: {
+  url: string;
+  note: string;
+  scope: "venue_run" | "venue" | "production";
+  venueRunId?: string | null;
+  productionId?: string | null;
+  venueId?: string | null;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await requireAdminEmail();
+    await applySourceOverride(input);
+  } catch (error) {
+    return { ok: false, error: plainAdminError(error) };
+  }
+  if (input.productionId && isUuid(input.productionId)) {
+    revalidatePath(`/admin/shows/${input.productionId}`);
+  }
+  revalidatePath("/admin/touring");
+  revalidatePath("/admin/look");
+  revalidatePath("/admin/venues");
+  return { ok: true };
+}
+
+export async function keepFlaggedNightAction(formData: FormData) {
+  const id = String(formData.get("nightId") ?? "");
+  const productionId = String(formData.get("productionId") ?? "");
+  if (!isUuid(id)) redirect("/admin/look?error=keep");
+  try {
+    await requireAdminEmail();
+    await keepFlaggedNight(id);
+  } catch {
+    redirect("/admin/look?error=keep");
+  }
+  revalidatePath("/admin/look");
+  if (isUuid(productionId)) revalidatePath(`/admin/shows/${productionId}`);
+  redirect("/admin/look?ok=keep");
+}
+
+export async function hideFlaggedNightAction(formData: FormData) {
+  const id = String(formData.get("nightId") ?? "");
+  const productionId = String(formData.get("productionId") ?? "");
+  if (!isUuid(id)) redirect("/admin/look?error=hide");
+  try {
+    await requireAdminEmail();
+    await hideFlaggedNight(id);
+  } catch {
+    redirect("/admin/look?error=hide");
+  }
+  revalidatePath("/admin/look");
+  if (isUuid(productionId)) revalidatePath(`/admin/shows/${productionId}`);
+  redirect("/admin/look?ok=hide");
+}
+
+export async function updateVenueAction(input: {
+  id: string;
+  siteDomain: string;
+  whatsOnUrl: string;
+  platform: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await requireAdminEmail();
+    await updateVenueDetails(input.id, input);
+  } catch (error) {
+    return { ok: false, error: plainAdminError(error) };
+  }
+  revalidatePath("/admin/venues");
+  return { ok: true };
+}
+
+export async function confirmVenueAction(formData: FormData) {
+  const id = String(formData.get("venueId") ?? "");
+  if (!isUuid(id)) redirect("/admin/venues?error=confirm");
+  try {
+    await requireAdminEmail();
+    await confirmVenue(id);
+  } catch {
+    redirect("/admin/venues?error=confirm");
+  }
+  revalidatePath("/admin/venues");
+  redirect("/admin/venues?ok=confirm");
 }

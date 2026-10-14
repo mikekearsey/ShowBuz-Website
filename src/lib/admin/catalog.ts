@@ -1,5 +1,6 @@
 import { ADMIN_SOURCE, ADMIN_SUPPRESSED_SOURCE, LONDON_TZ } from "./constants";
 import { londonWallTimeToIso } from "./london";
+import { isMissingSchema } from "./schema";
 
 type RestError = { message?: string; error?: string };
 
@@ -127,6 +128,13 @@ export type CatalogVenueRun = {
   ticket_url: string | null;
   source: string;
   sort_index: number;
+  book_url?: string | null;
+  times_url?: string | null;
+  times_status?: string | null;
+  booking_host?: string | null;
+  times_source?: string | null;
+  needs_review?: boolean;
+  review_reason?: string | null;
 };
 
 /** Inclusive calendar-month span between two YYYY-MM-DD dates. */
@@ -426,9 +434,18 @@ export async function getProduction(
 export async function listPerformances(
   productionId: string,
 ): Promise<CatalogPerformance[]> {
-  return restAll<CatalogPerformance>(
-    `catalog_performances?production_id=eq.${encodeURIComponent(productionId)}&select=id,production_id,starts_at,venue_name,venue_address,venue_city,source&order=starts_at.asc`,
-  );
+  const path = `catalog_performances?production_id=eq.${encodeURIComponent(productionId)}&order=starts_at.asc`;
+  try {
+    const rows = await restAll<CatalogPerformance & { review_reason?: string | null }>(
+      `${path}&select=id,production_id,starts_at,venue_name,venue_address,venue_city,source,review_reason`,
+    );
+    return rows.filter((row) => row.review_reason !== "duplicate_of");
+  } catch (error) {
+    if (!isMissingSchema(error)) throw error;
+    return restAll<CatalogPerformance>(
+      `${path}&select=id,production_id,starts_at,venue_name,venue_address,venue_city,source`,
+    );
+  }
 }
 
 export async function addCurtain(input: {
@@ -527,19 +544,50 @@ export async function confirmCatalogMonth(
 }
 
 
+const VENUE_RUN_BASE =
+  "id,production_id,city,venue_name,start_date,end_date,ticket_url,source,sort_index";
+const VENUE_RUN_FULL = `${VENUE_RUN_BASE},book_url,times_url,times_status,booking_host,times_source,needs_review,review_reason`;
+
+function completeVenueRun(row: CatalogVenueRun): CatalogVenueRun {
+  return {
+    ...row,
+    book_url: row.book_url ?? null,
+    times_url: row.times_url ?? null,
+    times_status: row.times_status ?? null,
+    booking_host: row.booking_host ?? null,
+    times_source: row.times_source ?? null,
+    needs_review: Boolean(row.needs_review),
+    review_reason: row.review_reason ?? null,
+  };
+}
+
+/** Superseded duplicate stops stay stored and stay off the admin lists. */
+export function isSupersededRun(run: { review_reason?: string | null }): boolean {
+  return run.review_reason === "duplicate_of";
+}
+
+async function fetchVenueRuns(filterPath: string): Promise<CatalogVenueRun[]> {
+  try {
+    const rows = await restAll<CatalogVenueRun>(`${filterPath}&select=${VENUE_RUN_FULL}`);
+    return rows.map(completeVenueRun).filter((run) => !isSupersededRun(run));
+  } catch (error) {
+    if (!isMissingSchema(error)) throw error;
+    const rows = await restAll<CatalogVenueRun>(`${filterPath}&select=${VENUE_RUN_BASE}`);
+    return rows.map(completeVenueRun);
+  }
+}
+
 export async function listVenueRuns(
   productionId: string,
 ): Promise<CatalogVenueRun[]> {
-  return rest<CatalogVenueRun[]>(
-    `catalog_venue_runs?production_id=eq.${encodeURIComponent(productionId)}&select=id,production_id,city,venue_name,start_date,end_date,ticket_url,source,sort_index&order=start_date.asc&limit=500`,
+  return fetchVenueRuns(
+    `catalog_venue_runs?production_id=eq.${encodeURIComponent(productionId)}&order=start_date.asc`,
   );
 }
 
 /** All touring stands — used to render count summaries on the catalog list. */
 export async function listAllVenueRuns(): Promise<CatalogVenueRun[]> {
-  return restAll<CatalogVenueRun>(
-    `catalog_venue_runs?select=id,production_id,city,venue_name,start_date,end_date,ticket_url,source,sort_index&order=start_date.asc`,
-  );
+  return fetchVenueRuns("catalog_venue_runs?order=start_date.asc");
 }
 
 
@@ -559,18 +607,30 @@ export async function listTouringVenueStats(
   for (let i = 0; i < productionIds.length; i += chunkSize) {
     const chunk = productionIds.slice(i, i + chunkSize);
     const filter = chunk.map(encodeURIComponent).join(",");
-    const rows = await restAll<{
+    type PerfStatRow = {
       production_id: string;
       venue_name: string | null;
       venue_city: string | null;
       starts_at: string;
       source: string;
-    }>(
-      `catalog_performances?production_id=in.(${filter})&select=production_id,venue_name,venue_city,starts_at,source`,
-    );
+      review_reason?: string | null;
+    };
+    const perfPath = `catalog_performances?production_id=in.(${filter})`;
+    let rows: PerfStatRow[];
+    try {
+      rows = await restAll<PerfStatRow>(
+        `${perfPath}&select=production_id,venue_name,venue_city,starts_at,source,review_reason`,
+      );
+    } catch (error) {
+      if (!isMissingSchema(error)) throw error;
+      rows = await restAll<PerfStatRow>(
+        `${perfPath}&select=production_id,venue_name,venue_city,starts_at,source`,
+      );
+    }
     const venuesByProd = new Map<string, Set<string>>();
     for (const row of rows) {
       if (row.source === ADMIN_SUPPRESSED_SOURCE) continue;
+      if (row.review_reason === "duplicate_of") continue;
 
       const ymd = new Intl.DateTimeFormat("en-CA", {
         timeZone: LONDON_TZ,

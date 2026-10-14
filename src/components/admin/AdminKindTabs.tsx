@@ -5,12 +5,16 @@ export function AdminKindTabs({
   reviewCount,
   residentHref,
   touringHref,
+  lookHref = "/admin/look",
+  venuesHref = "/admin/venues",
 }: {
-  active: "resident" | "touring" | "review";
+  active: "resident" | "touring" | "review" | "look" | "venues";
   /** Null hides the tab (review column or RPCs are not deployed). */
   reviewCount: number | null;
   residentHref: string;
   touringHref: string;
+  lookHref?: string;
+  venuesHref?: string;
 }) {
   return (
     <nav className="admin-kind-tabs" aria-label="Show kind">
@@ -35,6 +39,18 @@ export function AdminKindTabs({
           <span className="admin-kind-tab-count">{reviewCount}</span>
         </Link>
       )}
+      <Link
+        href={lookHref}
+        className={active === "look" ? "admin-kind-tab active" : "admin-kind-tab"}
+      >
+        Needs a look
+      </Link>
+      <Link
+        href={venuesHref}
+        className={active === "venues" ? "admin-kind-tab active" : "admin-kind-tab"}
+      >
+        Venues
+      </Link>
     </nav>
   );
 }

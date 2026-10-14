@@ -1192,3 +1192,215 @@ body {
 .admin-scrape-step.current strong::before {
   content: "→ ";
 }
+
+/* Compact admin blocks. 8 / 13 / 21 is a golden-ratio step. */
+.admin-table.compact th,
+.admin-table.compact td {
+  padding: 8px 13px;
+  vertical-align: top;
+}
+
+.admin-table td.wrap,
+.admin-table th.wrap {
+  white-space: normal;
+}
+
+.admin-muted {
+  color: #666;
+  font-weight: 500;
+}
+
+.admin-source-label,
+.admin-recheck,
+.admin-field-error,
+.admin-reason {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.admin-source-label,
+.admin-reason {
+  color: #666;
+  font-weight: 500;
+}
+
+.admin-recheck {
+  color: #9a6700;
+}
+
+.admin-field-error {
+  color: #b42318;
+}
+
+.admin-official {
+  display: grid;
+  gap: 8px;
+  min-width: 12em;
+  margin-top: 13px;
+  white-space: normal;
+}
+
+.admin-table .admin-official {
+  margin-top: 0;
+}
+
+.admin-official a {
+  word-break: break-word;
+}
+
+.admin-official-edit,
+.admin-paste,
+.admin-venue-facts {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-official-edit label,
+.admin-paste-label {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-inline-input {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+  background: #fff;
+}
+
+.admin-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-app button.admin-tiny {
+  width: fit-content;
+  justify-self: start;
+  background: transparent;
+  color: #1a1a1a;
+  border: 1px solid #ccc;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-app button.admin-compact {
+  width: fit-content;
+  justify-self: start;
+  padding: 5px 13px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.admin-app button.admin-tiny:disabled,
+.admin-app button.admin-compact:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.admin-stops {
+  margin: 0 0 21px;
+}
+
+.admin-stops h2 {
+  margin-bottom: 8px;
+}
+
+.admin-stop-venue {
+  font-weight: 700;
+}
+
+.admin-paste {
+  margin-top: 13px;
+  padding-top: 8px;
+  max-width: 28em;
+}
+
+.admin-preview {
+  margin: 0;
+  color: #333;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.admin-preview p,
+.admin-preview ul {
+  margin: 0;
+}
+
+.admin-preview ul {
+  padding-left: 1.1em;
+}
+
+.admin-look-list {
+  display: grid;
+  gap: 13px;
+}
+
+.admin-look-group {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 13px 21px;
+}
+
+.admin-look-group h2 {
+  margin-bottom: 8px;
+}
+
+.admin-look-group h2 a {
+  color: inherit;
+}
+
+.admin-look-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-look-night {
+  display: grid;
+  gap: 8px;
+  padding: 13px 0;
+  border-top: 1px solid #eee;
+}
+
+.admin-look-night-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 13px;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.admin-look-night .admin-reason {
+  margin-top: 0;
+}
+
+.admin-hide-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-hide-confirm p {
+  margin: 0;
+  flex-basis: 100%;
+  color: #444;
+  font-size: 13px;
+}
