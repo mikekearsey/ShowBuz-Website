@@ -1,3 +1,4 @@
+import { DayOfCheck } from "@/components/DayOfCheck";
 import { DownloadCta, Footer } from "@/components/DownloadCta";
 import { FeatureGrid } from "@/components/FeatureGrid";
 import { Header } from "@/components/Header";
@@ -13,6 +14,7 @@ export default function Home() {
       <main>
         <Hero />
         <ProofStrip />
+        <DayOfCheck />
         <HowItWorks />
         <FeatureGrid />
         <Objections />

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s · ShowBuz",
   },
   description:
-    "The app messages your deps for you. They tap Available and it shows up in both of your diaries in perfect synch - always!",
+    "Need a night off? Pick the show, pick your dep, and ShowBuz sends the message for you. They reply in the app or on WhatsApp.",
   keywords: [
     "ShowBuz",
     "West End",
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ShowBuz — Deps sorted. Drama optional.",
     description:
-      "Look at the diary, know the night is sorted, and stop thinking about it.",
+      "Need a night off? Pick the show, pick your dep, and ShowBuz sends the message for you.",
     type: "website",
     locale: "en_GB",
   },

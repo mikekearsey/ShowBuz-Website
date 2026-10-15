@@ -1,44 +1,44 @@
 const objections = [
   {
-    they: "My deps won't download an app",
-    we: "They don't have to. WhatsApp's fine. You still open the diary and see the night is covered.",
+    they: "My deps won't download another app.",
+    we: "They don't need to. They can answer on WhatsApp, and you'll still see the night sorted in your diary.",
   },
   {
     they: "What about Android?",
-    we: "The app is iPhone for now. If they're on Android, they answer on WhatsApp. That works.",
+    we: "It's iPhone only for now. Friends on Android can answer on WhatsApp, and it all works the same.",
   },
   {
-    they: "What if I need someone in forty minutes?",
-    we: "Phone them. This is so a night off isn't a scramble — not for a forty-minute dash.",
+    they: "I need someone in forty minutes!",
+    we: "Pick up the phone! ShowBuz is for planning ahead, not a mad dash before the half.",
   },
   {
-    they: "Is this the band chat?",
+    they: "Is this replacing the band chat?",
     we: "No. Keep that on WhatsApp.",
   },
 ];
 
 export function Objections() {
   return (
-    <section id="faq" className="relative scroll-mt-20 border-t border-line">
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
+    <section id="faq" className="relative scroll-mt-phi-89 border-t border-line">
+      <div className="mx-auto max-w-6xl px-phi-21 py-phi-55 sm:px-phi-34 lg:py-phi-89">
         <div className="max-w-2xl">
-          <p className="text-sm font-semibold tracking-widest text-buzz uppercase">
+          <p className="mb-phi-13 text-sm font-semibold tracking-widest text-buzz uppercase">
             Honest answers
           </p>
-          <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
+          <h2 className="font-display text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
             Go on then.
           </h2>
         </div>
-        <dl className="mt-12 grid gap-4 sm:grid-cols-2">
+        <dl className="mt-phi-34 grid gap-phi-21 sm:grid-cols-2 lg:mt-phi-55 lg:gap-phi-34">
           {objections.map((item) => (
             <div
               key={item.they}
-              className="rounded-2xl border border-line bg-surface p-6"
+              className="h-full rounded-2xl border border-line bg-surface p-phi-21"
             >
               <dt className="font-display text-lg font-bold tracking-tight">
                 {item.they}
               </dt>
-              <dd className="mt-2 text-sm leading-relaxed text-muted">
+              <dd className="mt-phi-13 text-sm leading-relaxed text-muted">
                 {item.we}
               </dd>
             </div>

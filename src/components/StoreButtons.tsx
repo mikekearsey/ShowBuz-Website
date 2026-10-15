@@ -3,16 +3,15 @@ type StoreButtonsProps = {
 };
 
 export function StoreButtons({ size = "md" }: StoreButtonsProps) {
-  const padding = size === "lg" ? "px-5 py-3.5" : "px-4 py-2.5";
   const icon = size === "lg" ? "h-8 w-8" : "h-7 w-7";
   const title = size === "lg" ? "text-[10px]" : "text-[9px]";
   const name = size === "lg" ? "text-lg" : "text-base";
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row">
+    <div className="grid w-full grid-cols-1 gap-phi-13 sm:grid-cols-2">
       <a
         href="#download"
-        className={`inline-flex w-full items-center justify-center gap-3 rounded-xl bg-white text-black shadow-[0_0_0_1px_rgba(255,255,255,0.08)] transition hover:bg-zinc-100 sm:w-auto ${padding}`}
+        className="inline-flex min-h-phi-55 w-full items-center justify-center gap-phi-13 rounded-xl bg-white px-phi-21 py-phi-13 text-black shadow-[0_0_0_1px_rgba(255,255,255,0.08)] transition hover:bg-zinc-100"
         aria-label="Download ShowBuz on the App Store"
       >
         <svg
@@ -32,7 +31,7 @@ export function StoreButtons({ size = "md" }: StoreButtonsProps) {
       </a>
       <a
         href="#download"
-        className={`inline-flex w-full items-center justify-center gap-3 rounded-xl bg-white text-black shadow-[0_0_0_1px_rgba(255,255,255,0.08)] transition hover:bg-zinc-100 sm:w-auto ${padding}`}
+        className="inline-flex min-h-phi-55 w-full items-center justify-center gap-phi-13 rounded-xl bg-white px-phi-21 py-phi-13 text-black shadow-[0_0_0_1px_rgba(255,255,255,0.08)] transition hover:bg-zinc-100"
         aria-label="Get ShowBuz on Google Play"
       >
         <svg
