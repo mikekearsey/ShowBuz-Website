@@ -9,9 +9,9 @@ export type ScreenShot = {
 
 export const screens = {
   diary: {
-    src: "/screens/diary-day.webp",
+    src: "/screens/diary-day-v3.webp",
     width: 1125,
-    height: 2282,
+    height: 2436,
     alt: "ShowBuz diary for The Last Horizon at The Irving Theatre on Saturday 31 October. The 2:30pm show is waiting for Ren Santo.",
   },
   sendCard: {
@@ -34,16 +34,16 @@ export const screens = {
     alt: "Messages with Ren Santo about The Last Horizon. Blue ticks show a WhatsApp message was read, and Ren can't do Friday 30 October at 7:30pm.",
   },
   whatsapp: {
-    src: "/screens/whatsapp-reply.webp",
+    src: "/screens/whatsapp-reply-v2.webp",
     width: 739,
-    height: 1504,
+    height: 1602,
     screenColor: "#101010",
     alt: "WhatsApp message from ShowBuz asking Ren Santo to hold The Last Horizon at 7:30pm on 31 October, with Available and Unavailable.",
   },
   relax: {
-    src: "/screens/hold-notification.webp",
+    src: "/screens/hold-notification-v2.webp",
     width: 1125,
-    height: 2285,
+    height: 2436,
     alt: "Notification that Ren Santo is free for The Last Horizon on Thursday 29 October at 7:30pm, with that night held in the diary.",
   },
   morning: {
