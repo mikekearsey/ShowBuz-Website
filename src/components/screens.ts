@@ -9,7 +9,7 @@ export type ScreenShot = {
 
 export const screens = {
   diary: {
-    src: "/screens/diary-day-v3.webp",
+    src: "/screens/diary-day-v4.webp",
     width: 1125,
     height: 2436,
     alt: "ShowBuz diary for The Last Horizon at The Irving Theatre on Saturday 31 October. The 2:30pm show is waiting for Ren Santo.",
