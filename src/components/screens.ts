@@ -28,7 +28,7 @@ export const screens = {
     alt: "Dates grid for The Last Horizon in October, with every dep on one screen and nights held, unavailable, waiting and confirmed.",
   },
   receipts: {
-    src: "/screens/read-receipts-v2.webp",
+    src: "/screens/read-receipts-v3.webp",
     width: 1125,
     height: 2436,
     alt: "Messages with Ren Santo about The Last Horizon. Blue ticks show a WhatsApp message was read, and Ren can't do Friday 30 October at 7:30pm.",
