@@ -2,6 +2,7 @@ import { DayOfCheck } from "@/components/DayOfCheck";
 import { DownloadCta, Footer } from "@/components/DownloadCta";
 import { FeatureGrid } from "@/components/FeatureGrid";
 import { Header } from "@/components/Header";
+import { HomeWidget } from "@/components/HomeWidget";
 import { Hero } from "@/components/Hero";
 import { HowItWorks } from "@/components/HowItWorks";
 import { Objections } from "@/components/Objections";
@@ -15,6 +16,7 @@ export default function Home() {
         <Hero />
         <ProofStrip />
         <DayOfCheck />
+        <HomeWidget />
         <HowItWorks />
         <FeatureGrid />
         <Objections />

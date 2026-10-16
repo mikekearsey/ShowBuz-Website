@@ -53,4 +53,10 @@ export const screens = {
     screenColor: "#05060e",
     alt: "WhatsApp message from Kit on the morning of the show: Hi Ren, just checking you're all set for The Last Horizon today at 14:30? Please tap below to confirm. Blue ticks show it was read.",
   },
+  widget: {
+    src: "/screens/home-widget.webp",
+    width: 479,
+    height: 478,
+    alt: "ShowBuz home screen widget for Friday 16 October: The Last Horizon at 19:30, with dep Tom R. shown underneath and one unread message.",
+  },
 } satisfies Record<string, ScreenShot>;
