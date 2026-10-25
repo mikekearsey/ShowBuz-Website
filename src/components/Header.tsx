@@ -27,8 +27,14 @@ export function Header() {
             Questions
           </a>
           <a
+            href="https://showbuz-chair.vercel.app/login"
+            className="inline-flex h-phi-34 items-center rounded-full border border-white/20 px-phi-13 text-sm font-semibold sm:px-phi-34 text-foreground transition hover:border-white/40 hover:bg-white/5"
+          >
+            Sign in
+          </a>
+          <a
             href="/#download"
-            className="inline-flex h-phi-55 items-center rounded-full bg-linear-to-r from-buzz to-buzz-bright px-phi-21 text-sm font-semibold text-black shadow-[0_0_24px_rgb(255_140_26_/_0.28)] transition hover:brightness-110"
+            className="inline-flex h-phi-34 items-center rounded-full bg-linear-to-r from-buzz to-buzz-bright px-phi-13 text-sm font-semibold sm:px-phi-34 text-black shadow-[0_0_24px_rgb(255_140_26_/_0.28)] transition hover:brightness-110"
           >
             Download
           </a>
