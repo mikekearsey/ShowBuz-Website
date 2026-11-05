@@ -26,7 +26,7 @@ export function Hero() {
             Deps sorted. Drama optional.
           </p>
           <p className="mt-phi-13 max-w-xl text-lg leading-relaxed text-muted text-pretty">
-            Need a night off? Pick the show, pick your dep, and ShowBuz sends
+            Need a day off? Pick the show, pick your dep, and ShowBuz sends
             the message for you. They reply in the app or on WhatsApp, and it
             shows up in both your diaries. No more scrolling back through chats
             to check who said yes.

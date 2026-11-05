@@ -65,7 +65,7 @@ const depFeatures: Feature[] = [
   },
   {
     title: "Your covers, in your own calendar.",
-    body: "Every booking lands in your Apple or Google Calendar. You can also choose to let chairs see when you're already busy, so they don't ask you for a night you can't do.",
+    body: "Every booking lands in your Apple or Google Calendar. You can also choose to let chairs see when you're already busy, so they don't ask you for a curtain you can't do.",
     icon: CalendarIcon,
   },
 ];

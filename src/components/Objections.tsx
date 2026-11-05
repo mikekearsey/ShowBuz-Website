@@ -1,7 +1,7 @@
 const objections = [
   {
     they: "My deps won't download another app.",
-    we: "They don't need to. They can answer on WhatsApp, and you'll still see the night sorted in your diary.",
+    we: "They don't need to. They can answer on WhatsApp, and you'll still see the curtain sorted in your diary.",
   },
   {
     they: "What about Android?",

@@ -25,7 +25,7 @@ export const screens = {
     src: "/screens/dates-grid.webp",
     width: 1125,
     height: 2436,
-    alt: "Dates grid for The Last Horizon in October, with every dep on one screen and nights held, unavailable, waiting and confirmed.",
+    alt: "Dates grid for The Last Horizon in October, with every dep on one screen and curtains held, unavailable, waiting and confirmed.",
   },
   receipts: {
     src: "/screens/read-receipts-v3.webp",
@@ -44,7 +44,7 @@ export const screens = {
     src: "/screens/hold-notification-v2.webp",
     width: 1125,
     height: 2436,
-    alt: "Notification that Ren Santo is free for The Last Horizon on Thursday 29 October at 7:30pm, with that night held in the diary.",
+    alt: "Notification that Ren Santo is free for The Last Horizon on Thursday 29 October at 7:30pm, with that curtain held in the diary.",
   },
   morning: {
     src: "/screens/day-of-confirm.webp",

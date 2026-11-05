@@ -10,7 +10,7 @@ const steps = [
   {
     n: "2",
     title: "Ask a dep.",
-    body: "Tap the night and pick who you'd like. Ask if they're free, ask them to hold it, or book them. You'll see the message before it goes.",
+    body: "Tap the curtain and pick who you'd like. Ask if they're free, ask them to hold it, or book them. You'll see the message before it goes.",
   },
   {
     n: "3",
@@ -70,7 +70,7 @@ export function HowItWorks() {
                 Relax.
               </h3>
               <p className="mt-phi-8 text-sm leading-relaxed text-muted">
-                The night turns green when it&apos;s sorted. If someone&apos;s
+                The curtain turns green when it&apos;s sorted. If someone&apos;s
                 holding a date for you, it stays held until you decide. We&apos;ll
                 nudge you 48 hours before, so nobody&apos;s left hanging.
               </p>

@@ -6,7 +6,7 @@ import { Header } from "@/components/Header";
 export const metadata: Metadata = {
   title: "How to use ShowBuz",
   description:
-    "Instructions for using ShowBuz: adding a show in Settings, asking a dep from Diary, Auto Book, Auto reconfirm, and answering Available or Unavailable.",
+    "How to use the ShowBuz iPhone app: bring in what you already have, book a dep, the 09:00 check, and the home screen widget.",
 };
 
 export default function GuidePage() {
