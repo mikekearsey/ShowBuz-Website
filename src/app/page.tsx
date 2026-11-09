@@ -1,26 +1,23 @@
-import { DayOfCheck } from "@/components/DayOfCheck";
-import { DownloadCta, Footer } from "@/components/DownloadCta";
-import { FeatureGrid } from "@/components/FeatureGrid";
+import { Footer } from "@/components/DownloadCta";
 import { Header } from "@/components/Header";
-import { HomeWidget } from "@/components/HomeWidget";
-import { Hero } from "@/components/Hero";
-import { HowItWorks } from "@/components/HowItWorks";
-import { Objections } from "@/components/Objections";
-import { ProofStrip } from "@/components/ProofStrip";
+import { ChairSection } from "@/components/mockup/ChairSection";
+import { DepSection } from "@/components/mockup/DepSection";
+import { FaqSection } from "@/components/mockup/FaqSection";
+import { FinalCall } from "@/components/mockup/FinalCall";
+import { MockupHero } from "@/components/mockup/MockupHero";
+import { PitSection } from "@/components/mockup/PitSection";
 
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col">
       <Header />
       <main>
-        <Hero />
-        <ProofStrip />
-        <DayOfCheck />
-        <HomeWidget />
-        <HowItWorks />
-        <FeatureGrid />
-        <Objections />
-        <DownloadCta />
+        <MockupHero />
+        <PitSection />
+        <ChairSection />
+        <DepSection />
+        <FaqSection />
+        <FinalCall />
       </main>
       <Footer />
     </div>

@@ -14,14 +14,14 @@ export function Header() {
           className="flex items-center gap-phi-8 text-sm font-medium text-muted sm:gap-phi-13"
           aria-label="Primary"
         >
-          <a href="/#how" className="hidden h-phi-55 items-center transition hover:text-foreground sm:inline-flex">
-            How it works
+          <a href="/#chairs" className="hidden h-phi-55 items-center transition hover:text-foreground sm:inline-flex">
+            For chairs
           </a>
           <a href="/guide" className="hidden h-phi-55 items-center transition hover:text-foreground sm:inline-flex">
             Guide
           </a>
-          <a href="/#features" className="hidden h-phi-55 items-center transition hover:text-foreground lg:inline-flex">
-            Features
+          <a href="/#deps" className="hidden h-phi-55 items-center transition hover:text-foreground lg:inline-flex">
+            For deps
           </a>
           <a href="/#faq" className="hidden h-phi-55 items-center transition hover:text-foreground lg:inline-flex">
             Questions
