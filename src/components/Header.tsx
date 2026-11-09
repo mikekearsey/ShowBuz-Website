@@ -1,43 +1,44 @@
+import Link from "next/link";
 import { Logo } from "./Logo";
 
 export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/5 bg-background/75 backdrop-blur-xl">
       <div className="mx-auto flex h-phi-89 max-w-6xl items-center justify-between px-phi-21 sm:px-phi-34">
-        <a href="/" className="inline-flex h-phi-55 items-center gap-phi-8">
+        <Link href="/" className="inline-flex h-phi-55 items-center gap-phi-8">
           <Logo size={40} className="h-10 w-10 shadow-none" priority alt="" />
           <span className="font-display text-lg font-bold tracking-tight">
             ShowBuz
           </span>
-        </a>
+        </Link>
         <nav
           className="flex items-center gap-phi-8 text-sm font-medium text-muted sm:gap-phi-13"
           aria-label="Primary"
         >
-          <a href="/#chairs" className="hidden h-phi-55 items-center transition hover:text-foreground sm:inline-flex">
+          <Link href="/#chairs" className="hidden h-phi-55 items-center transition hover:text-foreground sm:inline-flex">
             For chairs
-          </a>
-          <a href="/guide" className="hidden h-phi-55 items-center transition hover:text-foreground sm:inline-flex">
+          </Link>
+          <Link href="/guide" className="hidden h-phi-55 items-center transition hover:text-foreground sm:inline-flex">
             Guide
-          </a>
-          <a href="/#deps" className="hidden h-phi-55 items-center transition hover:text-foreground lg:inline-flex">
+          </Link>
+          <Link href="/#deps" className="hidden h-phi-55 items-center transition hover:text-foreground lg:inline-flex">
             For deps
-          </a>
-          <a href="/#faq" className="hidden h-phi-55 items-center transition hover:text-foreground lg:inline-flex">
+          </Link>
+          <Link href="/#faq" className="hidden h-phi-55 items-center transition hover:text-foreground lg:inline-flex">
             Questions
-          </a>
+          </Link>
           <a
             href="https://showbuz-chair.vercel.app/login"
             className="inline-flex h-phi-34 items-center rounded-full border border-white/20 px-phi-13 text-sm font-semibold sm:px-phi-34 text-foreground transition hover:border-white/40 hover:bg-white/5"
           >
             Sign in
           </a>
-          <a
+          <Link
             href="/#download"
             className="inline-flex h-phi-34 items-center rounded-full bg-linear-to-r from-buzz to-buzz-bright px-phi-13 text-sm font-semibold sm:px-phi-34 text-black shadow-[0_0_24px_rgb(255_140_26_/_0.28)] transition hover:brightness-110"
           >
             Download
-          </a>
+          </Link>
         </nav>
       </div>
     </header>

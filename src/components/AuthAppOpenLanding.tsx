@@ -33,6 +33,8 @@ export function AuthAppOpenLanding({
   const [secondaryHref, setSecondaryHref] = useState(SHOWBUZ_APP_CALLBACK);
 
   useEffect(() => {
+    // Reads window.location (token in the URL), so it must run after mount to avoid a hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPrimaryHref(
       showbuzAppHref(
         primaryIsRecovery ? { flow: "recovery", type: "recovery" } : undefined,
