@@ -365,12 +365,30 @@ h3 {
 }
 
 .app-guide ol.steps li {
-  margin-bottom: 8px;
+  margin-bottom: 21px;
   line-height: 1.55;
+}
+
+.app-guide-step {
+  display: grid;
+  gap: 21px;
+}
+
+.app-guide-step p {
+  margin: 0;
+}
+
+.app-guide-shots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 21px;
+  justify-content: center;
 }
 
 .app-guide figure {
   margin: 0;
+  flex: 0 0 auto;
+  width: 220px;
 }
 
 .app-guide figcaption {
@@ -378,6 +396,30 @@ h3 {
   font-size: 13px;
   line-height: 1.45;
   color: #555;
+}
+
+@media (min-width: 640px) {
+  .app-guide figure {
+    width: 260px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-guide figure {
+    width: 300px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .app-guide-step.has-shot:not(.has-many) {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    align-items: start;
+    gap: 32px;
+  }
+
+  .app-guide-shots {
+    justify-content: flex-start;
+  }
 }
 
 .app-guide .contact {
