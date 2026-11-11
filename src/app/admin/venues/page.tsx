@@ -7,6 +7,7 @@ import { VenueRow } from "@/components/admin/VenueRow";
 import { loadCatalogReview } from "@/lib/admin/catalog-review";
 import { loadVenues } from "@/lib/admin/coverage";
 import { adminCookieName, readAdminEmail } from "@/lib/admin/session";
+import { loadTourTimesTabCount } from "@/lib/admin/tour-times";
 
 export default async function VenuesPage({
   searchParams,
@@ -34,6 +35,7 @@ export default async function VenuesPage({
     status === "confirmed" ? confirmed : status === "unsure" ? unsure : snapshot.venues;
   const review = await loadCatalogReview().catch(() => null);
   const reviewCount = review && review.available && review.rpc ? review.queue.length : null;
+  const tourTimesCount = await loadTourTimesTabCount();
 
   return (
     <main>
@@ -57,6 +59,7 @@ export default async function VenuesPage({
         <AdminKindTabs
           active="venues"
           reviewCount={reviewCount}
+          tourTimesCount={tourTimesCount}
           residentHref="/admin/resident"
           touringHref="/admin/touring"
         />

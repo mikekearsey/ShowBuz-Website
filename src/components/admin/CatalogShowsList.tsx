@@ -32,6 +32,7 @@ import {
   type CatalogReviewSnapshot,
 } from "@/lib/admin/catalog-review";
 import { formatAdminDate, londonTodayYmd } from "@/lib/admin/london";
+import { loadTourTimesTabCount } from "@/lib/admin/tour-times";
 
 function listHref(
   path: string,
@@ -209,6 +210,7 @@ export async function CatalogShowsList({
   const copy = KIND_COPY[kind];
   const basePath = kind === "resident" ? "/admin/resident" : "/admin/touring";
   const reviewCount = review.available && review.rpc ? review.queue.length : null;
+  const tourTimesCount = await loadTourTimesTabCount();
   const statusForLinks = filter === "all" ? undefined : filter;
   const rejectedCount = rejectedIds.size;
 
@@ -231,6 +233,7 @@ export async function CatalogShowsList({
         <AdminKindTabs
           active={kind}
           reviewCount={reviewCount}
+          tourTimesCount={tourTimesCount}
           residentHref={listHref("/admin/resident", {
             status: filter === "archived" ? "archived" : undefined,
             rejected: showRejected,

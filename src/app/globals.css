@@ -645,6 +645,7 @@ h3 {
 
 .admin-kind-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin: 0;
 }
@@ -1464,4 +1465,222 @@ h3 {
   flex-basis: 100%;
   color: #444;
   font-size: 13px;
+}
+
+.admin-tour-times-section {
+  margin: 0 0 28px;
+}
+
+.admin-tour-times-section h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.admin-tour-times-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-tour-times-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.admin-tour-times-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.admin-tour-times-card h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.admin-tour-times-meta {
+  margin: 0 0 6px;
+  color: #444;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.admin-tour-times-card .admin-reason {
+  margin: 0;
+  color: #666;
+  font-size: 13px;
+}
+
+.admin-tour-times-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 4px 14px;
+  border: 1px solid #1a1a1a;
+  border-radius: 999px;
+  background: #fff;
+  color: #1a1a1a;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.admin-app button.admin-tour-times-pill.solid,
+a.admin-tour-times-pill.solid {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+
+.admin-tour-times-days {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-tour-times-day {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 7rem) 4.5rem 4.5rem minmax(5rem, auto);
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-tour-times-day-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.admin-tour-times-time {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-tour-times-time:disabled {
+  background: #f5f5f5;
+  color: #999;
+}
+
+.admin-tour-times-noshow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #444;
+  white-space: nowrap;
+}
+
+.admin-tour-times-preview {
+  margin: 12px 0 0;
+  color: #1a1a1a;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.admin-tour-times-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.admin-app button.admin-tour-times-cancel {
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #b00020;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-app button.admin-tour-times-cancel:hover,
+.admin-app button.admin-tour-times-cancel:focus-visible {
+  background: transparent;
+  color: #8a0018;
+  text-decoration: underline;
+  outline: 2px solid #b00020;
+  outline-offset: 2px;
+}
+
+.admin-tour-times-compare {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .admin-tour-times-compare {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.admin-tour-times-compare-label {
+  margin: 0 0 4px;
+  color: #666;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.admin-tour-times-compare p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.admin-tour-times-footer {
+  margin-top: 8px;
+}
+
+@media (max-width: 520px) {
+  .admin-tour-times-day {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "label label"
+      "t1 t2"
+      "noshow noshow";
+  }
+
+  .admin-tour-times-day-label {
+    grid-area: label;
+  }
+
+  .admin-tour-times-day .admin-tour-times-time:nth-of-type(1) {
+    grid-area: t1;
+  }
+
+  .admin-tour-times-day .admin-tour-times-time:nth-of-type(2) {
+    grid-area: t2;
+  }
+
+  .admin-tour-times-noshow {
+    grid-area: noshow;
+  }
 }

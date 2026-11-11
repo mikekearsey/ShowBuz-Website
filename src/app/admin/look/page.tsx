@@ -7,6 +7,7 @@ import { FlaggedNightRow } from "@/components/admin/FlaggedNightRow";
 import { loadCatalogReview } from "@/lib/admin/catalog-review";
 import { loadFlaggedNights, type FlaggedNight } from "@/lib/admin/coverage";
 import { adminCookieName, readAdminEmail } from "@/lib/admin/session";
+import { loadTourTimesTabCount } from "@/lib/admin/tour-times";
 
 function groupNights(nights: FlaggedNight[]): Array<{
   productionId: string;
@@ -51,6 +52,7 @@ export default async function NeedsALookPage({
   const groups = groupNights(snapshot.nights);
   const review = await loadCatalogReview().catch(() => null);
   const reviewCount = review && review.available && review.rpc ? review.queue.length : null;
+  const tourTimesCount = await loadTourTimesTabCount();
 
   return (
     <main>
@@ -74,6 +76,7 @@ export default async function NeedsALookPage({
         <AdminKindTabs
           active="look"
           reviewCount={reviewCount}
+          tourTimesCount={tourTimesCount}
           residentHref="/admin/resident"
           touringHref="/admin/touring"
         />

@@ -3,18 +3,23 @@ import Link from "next/link";
 export function AdminKindTabs({
   active,
   reviewCount,
+  tourTimesCount = null,
   residentHref,
   touringHref,
   lookHref = "/admin/look",
   venuesHref = "/admin/venues",
+  tourTimesHref = "/admin/tour-times",
 }: {
-  active: "resident" | "touring" | "review" | "look" | "venues";
+  active: "resident" | "touring" | "review" | "look" | "venues" | "tour-times";
   /** Null hides the tab (review column or RPCs are not deployed). */
   reviewCount: number | null;
+  /** Null hides the count (RPC not deployed). Tab still shows. */
+  tourTimesCount?: number | null;
   residentHref: string;
   touringHref: string;
   lookHref?: string;
   venuesHref?: string;
+  tourTimesHref?: string;
 }) {
   return (
     <nav className="admin-kind-tabs" aria-label="Show kind">
@@ -29,6 +34,15 @@ export function AdminKindTabs({
         className={active === "touring" ? "admin-kind-tab active" : "admin-kind-tab"}
       >
         Touring
+      </Link>
+      <Link
+        href={tourTimesHref}
+        className={active === "tour-times" ? "admin-kind-tab active" : "admin-kind-tab"}
+      >
+        Tour times
+        {tourTimesCount === null ? null : (
+          <span className="admin-kind-tab-count">{tourTimesCount}</span>
+        )}
       </Link>
       {reviewCount === null ? null : (
         <Link

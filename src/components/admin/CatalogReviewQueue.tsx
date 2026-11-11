@@ -22,11 +22,13 @@ export function CatalogReviewQueue({
   queue,
   rejected,
   notice,
+  tourTimesCount = null,
 }: {
   email: string;
   queue: CatalogReviewQueueRow[];
   rejected: CatalogRejectedRow[];
   notice?: "saved" | "failed";
+  tourTimesCount?: number | null;
 }) {
   return (
     <main>
@@ -50,6 +52,7 @@ export function CatalogReviewQueue({
         <AdminKindTabs
           active="review"
           reviewCount={queue.length}
+          tourTimesCount={tourTimesCount}
           residentHref="/admin/resident"
           touringHref="/admin/touring"
         />

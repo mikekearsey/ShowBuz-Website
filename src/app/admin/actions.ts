@@ -33,6 +33,11 @@ import {
 } from "@/lib/admin/coverage";
 import { plainAdminError } from "@/lib/admin/schema";
 import { adminCookieName, createAdminToken, isAllowedAdminEmail, readAdminEmail } from "@/lib/admin/session";
+import {
+  setTourStopTimes,
+  tourTimesActionError,
+  type TourCurtainStamp,
+} from "@/lib/admin/tour-times";
 
 async function requireAdminEmail(): Promise<string> {
   const jar = await cookies();
@@ -346,4 +351,40 @@ export async function confirmVenueAction(formData: FormData) {
   }
   revalidatePath("/admin/venues");
   redirect("/admin/venues?ok=confirm");
+}
+
+export async function saveTourStopTimesAction(input: {
+  runId: string;
+  datesTimes: TourCurtainStamp[];
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const email = await requireAdminEmail();
+    if (!isUuid(input.runId)) {
+      return { ok: false, error: "That stop could not be found." };
+    }
+    if (!Array.isArray(input.datesTimes) || input.datesTimes.length === 0) {
+      return { ok: false, error: "Add at least one curtain time." };
+    }
+    for (const stamp of input.datesTimes) {
+      const date = String(stamp.date ?? "").trim();
+      const time = String(stamp.time ?? "").trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) {
+        return { ok: false, error: "Each curtain needs a date and HH:MM time." };
+      }
+    }
+    await setTourStopTimes({
+      runId: input.runId,
+      datesTimes: input.datesTimes.map((stamp) => ({
+        date: stamp.date.trim(),
+        time: stamp.time.trim(),
+      })),
+      setBy: email,
+    });
+  } catch (error) {
+    return { ok: false, error: tourTimesActionError(error) };
+  }
+  revalidatePath("/admin/tour-times");
+  revalidatePath("/admin/touring");
+  revalidatePath("/admin/look");
+  return { ok: true };
 }

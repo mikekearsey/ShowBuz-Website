@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { CatalogReviewQueue } from "@/components/admin/CatalogReviewQueue";
 import { loadCatalogReview } from "@/lib/admin/catalog-review";
 import { adminCookieName, readAdminEmail } from "@/lib/admin/session";
+import { loadTourTimesTabCount } from "@/lib/admin/tour-times";
 
 export default async function AdminReviewPage({
   searchParams,
@@ -24,6 +25,7 @@ export default async function AdminReviewPage({
   const query = await searchParams;
   const notice =
     query.ok === "review" ? "saved" : query.error === "review" ? "failed" : undefined;
+  const tourTimesCount = await loadTourTimesTabCount();
 
   return (
     <CatalogReviewQueue
@@ -31,6 +33,7 @@ export default async function AdminReviewPage({
       queue={review.queue}
       rejected={review.rejected}
       notice={notice}
+      tourTimesCount={tourTimesCount}
     />
   );
 }
