@@ -36,7 +36,7 @@ export function ArchiveShowButton({
       <input type="hidden" name="productionId" value={productionId} />
       <input type="hidden" name="listingKind" value={listingKind} />
       <input type="hidden" name="archived" value={archived ? "false" : "true"} />
-      <button type="submit" className="admin-tour-times-pill">
+      <button type="submit" className="admin-tour-times-pill admin-archive-pill">
         {archived ? "Unarchive" : "Archive"}
       </button>
     </form>

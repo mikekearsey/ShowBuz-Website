@@ -1618,6 +1618,19 @@ a.admin-tour-times-pill.solid {
   border-color: #1a1a1a;
 }
 
+.admin-app button.admin-archive-pill {
+  min-height: 28px;
+  min-width: 96px;
+  padding: 4px 18px;
+  border: 1px solid #1a1a1a;
+  border-radius: 999px;
+  background: #fff;
+  color: #1a1a1a;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
 .admin-tour-times-days {
   list-style: none;
   margin: 0;
