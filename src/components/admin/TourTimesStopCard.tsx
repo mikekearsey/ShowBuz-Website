@@ -8,6 +8,7 @@ import {
   formatCurtainPreview,
   formatRunDayLabel,
   formatStopDateRange,
+  formatStopTimeZoneLabel,
   type TourCurtainStamp,
   type TourTimesNeedStop,
 } from "@/lib/admin/tour-times";
@@ -171,6 +172,7 @@ export function TourTimesStopCard({ stop }: { stop: TourTimesNeedStop }) {
   }
 
   const venueLine = [stop.venueName, stop.city].filter(Boolean).join(", ");
+  const zoneLabel = formatStopTimeZoneLabel(stop.timeZone);
 
   return (
     <article className="admin-tour-times-card">
@@ -183,6 +185,9 @@ export function TourTimesStopCard({ stop }: { stop: TourTimesNeedStop }) {
             {formatStopDateRange(stop.startDate, stop.endDate)}
           </p>
           <p className="admin-reason">{stop.reason}</p>
+          {zoneLabel ? (
+            <p className="admin-tour-times-zone">{zoneLabel}</p>
+          ) : null}
         </div>
         {stop.boxOfficeUrl ? (
           <a

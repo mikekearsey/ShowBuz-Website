@@ -15,6 +15,8 @@ export type TourTimesNeedStop = {
   boxOfficeUrl: string | null;
   reason: string;
   nights: TourCurtainStamp[];
+  /** IANA zone for the stop; times are wall-clock in this zone. */
+  timeZone: string;
 };
 
 export type TourTimesDisagree = {
@@ -58,7 +60,15 @@ type RpcRow = {
   source_url: string | null;
   later_count: number | null;
   filled_today: number | null;
+  time_zone: string | null;
 };
+
+/** London (and blank) need no label; anything else is shown on the card. */
+export function formatStopTimeZoneLabel(timeZone: string | null | undefined): string | null {
+  const tz = (timeZone ?? "").trim() || "Europe/London";
+  if (tz === "Europe/London") return null;
+  return `Times in ${tz} (local)`;
+}
 
 function supabaseUrl(): string {
   return (
@@ -223,6 +233,7 @@ export async function loadTourTimesAttention(
         boxOfficeUrl: row.box_office_url,
         reason: row.reason?.trim() || "times TBC",
         nights: asStamps(row.nights),
+        timeZone: row.time_zone?.trim() || "Europe/London",
       });
       continue;
     }

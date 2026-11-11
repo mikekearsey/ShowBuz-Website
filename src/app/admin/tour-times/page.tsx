@@ -46,8 +46,9 @@ export default async function AdminTourTimesPage() {
           <p className="admin-kicker">ShowBuz Admin</p>
           <h1>Tour times</h1>
           <p className="admin-lead">
-            Type in curtain times for tour stops the robot cannot read. Times are
-            London local. Never guess — only what the box office shows.
+            Type in curtain times for tour stops the robot cannot read. Use the
+            stop&apos;s local time (labelled when it is not London). Never guess —
+            only what the box office shows.
           </p>
         </div>
         <form action={logoutAction}>
