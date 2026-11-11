@@ -527,6 +527,53 @@ h3 {
   font: inherit;
 }
 
+.admin-password-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.admin-password-wrap input {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 44px;
+}
+
+.admin-app button.admin-password-toggle {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #444;
+  font: inherit;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.admin-app button.admin-password-toggle:hover,
+.admin-app button.admin-password-toggle:focus-visible {
+  background: transparent;
+  color: #1a1a1a;
+}
+
+.admin-app button.admin-password-toggle:focus-visible {
+  outline: 2px solid #1a1a1a;
+  outline-offset: 2px;
+}
+
+.admin-password-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
 .admin-app button {
   appearance: none;
   border: 0;

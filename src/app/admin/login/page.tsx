@@ -1,3 +1,4 @@
+import { PasswordInput } from "@/components/admin/PasswordInput";
 import { loginAction } from "../actions";
 
 export default async function AdminLoginPage({
@@ -29,8 +30,7 @@ export default async function AdminLoginPage({
         </label>
         <label>
           Password
-          <input
-            type="password"
+          <PasswordInput
             name="password"
             autoComplete="current-password"
             required

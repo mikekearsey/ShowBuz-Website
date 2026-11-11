@@ -10,10 +10,7 @@ function adminEmails(): string[] {
 }
 
 function sessionSecret(): string {
-  const secret =
-    process.env.ADMIN_SESSION_SECRET?.trim() ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
-    "";
+  const secret = process.env.ADMIN_SESSION_SECRET?.trim() || "";
   if (secret) return secret;
   if (process.env.NODE_ENV !== "production") return "dev-only-admin-session";
   return "";

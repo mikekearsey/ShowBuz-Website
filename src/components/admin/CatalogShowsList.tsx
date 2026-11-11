@@ -33,6 +33,7 @@ import {
 } from "@/lib/admin/catalog-review";
 import { formatAdminDate, londonTodayYmd } from "@/lib/admin/london";
 import { loadTourTimesTabCount } from "@/lib/admin/tour-times";
+import { ArchiveShowButton } from "@/components/admin/ArchiveShowButton";
 
 function listHref(
   path: string,
@@ -122,6 +123,7 @@ function isArchivedShow(
   runsByProduction: Map<string, CatalogVenueRun[]>,
   statsByProduction: Map<string, TouringVenueStats>,
 ): boolean {
+  if (show.admin_archived_at) return true;
   if (show.scrape_status === "ignored") return false;
   const runs = runsByProduction.get(show.id) ?? [];
   const stats = statsByProduction.get(show.id);
@@ -309,8 +311,9 @@ export async function CatalogShowsList({
       )}
       {filter === "archived" ? (
         <p className="admin-footnote">
-          Shows with no nights on or after today. They return to the main list
-          automatically when a scrape adds future dates.
+          Shows with no nights on or after today, or archived by an admin.
+          Date-archived shows return to the main list automatically when a
+          scrape adds future dates. Admin-archived shows need Unarchive.
         </p>
       ) : null}
 
@@ -324,6 +327,7 @@ export async function CatalogShowsList({
               {kind === "touring" ? <th>Last curtain</th> : <th>Finish</th>}
               {kind === "touring" ? <th>Coverage</th> : null}
               <th>Scrape</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -373,6 +377,30 @@ export async function CatalogShowsList({
                 ) : null}
                 <td>
                   <ScrapeStatusDetail production={show} />
+                  {filter === "archived" && show.admin_archived_at ? (
+                    <p className="admin-footnote" style={{ margin: "6px 0 0" }}>
+                      Archived by admin {formatAdminDate(show.admin_archived_at)}
+                    </p>
+                  ) : null}
+                </td>
+                <td>
+                  {filter === "archived" ? (
+                    show.admin_archived_at ? (
+                      <ArchiveShowButton
+                        productionId={show.id}
+                        name={show.name}
+                        listingKind={kind}
+                        archived
+                      />
+                    ) : null
+                  ) : (
+                    <ArchiveShowButton
+                      productionId={show.id}
+                      name={show.name}
+                      listingKind={kind}
+                      archived={false}
+                    />
+                  )}
                 </td>
               </tr>
               );

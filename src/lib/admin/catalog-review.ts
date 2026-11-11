@@ -285,6 +285,21 @@ export async function setCatalogReviewStatus(
   });
 }
 
+export async function setCatalogArchived(
+  id: string,
+  archived: boolean,
+  reason: string | null = null,
+): Promise<void> {
+  await serviceRest<unknown>("rpc/set_catalog_archived", {
+    method: "POST",
+    body: JSON.stringify({
+      p_id: id,
+      p_archived: archived,
+      p_reason: reason,
+    }),
+  });
+}
+
 export function rejectedAsProduction(row: CatalogRejectedRow): CatalogProduction | null {
   if (row.listing_kind !== "resident" && row.listing_kind !== "touring") return null;
   const listingKind: CatalogListingKind = row.listing_kind;
@@ -301,5 +316,7 @@ export function rejectedAsProduction(row: CatalogRejectedRow): CatalogProduction
     refresh_enqueued_at: row.refresh_enqueued_at,
     admin_locked_months: [],
     source_provider: row.source_provider,
+    admin_archived_at: null,
+    admin_archived_reason: null,
   };
 }

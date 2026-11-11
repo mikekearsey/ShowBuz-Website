@@ -19,6 +19,9 @@ export type CatalogProduction = {
   refresh_enqueued_at: string | null;
   admin_locked_months: string[];
   source_provider: string | null;
+  /** Set when an admin archived this catalogue row. */
+  admin_archived_at: string | null;
+  admin_archived_reason: string | null;
 };
 
 export type RefreshShowResult = {
@@ -364,24 +367,37 @@ export function isAdminLocked(performance: Pick<CatalogPerformance, "source">): 
 }
 
 const PRODUCTION_FIELDS =
-  "id,name,listing_kind,venue_summary,run_start_date,run_end_date,scrape_status,scrape_error,last_scraped_at,refresh_enqueued_at,admin_locked_months,source_provider";
+  "id,name,listing_kind,venue_summary,run_start_date,run_end_date,scrape_status,scrape_error,last_scraped_at,refresh_enqueued_at,admin_locked_months,source_provider,admin_archived_at,admin_archived_reason";
 const PRODUCTION_FIELDS_LEGACY =
   "id,name,listing_kind,venue_summary,run_start_date,run_end_date,scrape_status,last_scraped_at,refresh_enqueued_at,source_provider";
 const PRODUCTION_FIELDS_NO_LOCKED =
   "id,name,listing_kind,venue_summary,run_start_date,run_end_date,scrape_status,scrape_error,last_scraped_at,refresh_enqueued_at,source_provider";
+const PRODUCTION_FIELDS_NO_ARCHIVED =
+  "id,name,listing_kind,venue_summary,run_start_date,run_end_date,scrape_status,scrape_error,last_scraped_at,refresh_enqueued_at,admin_locked_months,source_provider";
 
 function withNullScrapeError<T extends {
   scrape_error?: string | null;
   admin_locked_months?: string[] | null;
+  admin_archived_at?: string | null;
+  admin_archived_reason?: string | null;
 }>(
   rows: T[],
-): Array<T & { scrape_error: string | null; admin_locked_months: string[] }> {
+): Array<
+  T & {
+    scrape_error: string | null;
+    admin_locked_months: string[];
+    admin_archived_at: string | null;
+    admin_archived_reason: string | null;
+  }
+> {
   return rows.map((row) => ({
     ...row,
     scrape_error: row.scrape_error ?? null,
     admin_locked_months: Array.isArray(row.admin_locked_months)
       ? row.admin_locked_months
       : [],
+    admin_archived_at: row.admin_archived_at ?? null,
+    admin_archived_reason: row.admin_archived_reason ?? null,
   }));
 }
 
@@ -393,6 +409,12 @@ export async function listProductions(): Promise<CatalogProduction[]> {
     return withNullScrapeError(rows);
   } catch (error) {
     const message = String(error);
+    if (message.includes("admin_archived_at") || message.includes("admin_archived_reason")) {
+      const rows = await rest<CatalogProduction[]>(
+        `catalog_productions?select=${PRODUCTION_FIELDS_NO_ARCHIVED}&order=name.asc`,
+      );
+      return withNullScrapeError(rows);
+    }
     if (message.includes("admin_locked_months")) {
       const rows = await rest<CatalogProduction[]>(
         `catalog_productions?select=${PRODUCTION_FIELDS_NO_LOCKED}&order=name.asc`,
@@ -417,6 +439,12 @@ export async function getProduction(
     return withNullScrapeError(rows)[0] ?? null;
   } catch (error) {
     const message = String(error);
+    if (message.includes("admin_archived_at") || message.includes("admin_archived_reason")) {
+      const rows = await rest<CatalogProduction[]>(
+        `catalog_productions?id=eq.${encodeURIComponent(id)}&select=${PRODUCTION_FIELDS_NO_ARCHIVED}`,
+      );
+      return withNullScrapeError(rows)[0] ?? null;
+    }
     if (message.includes("admin_locked_months")) {
       const rows = await rest<CatalogProduction[]>(
         `catalog_productions?id=eq.${encodeURIComponent(id)}&select=${PRODUCTION_FIELDS_NO_LOCKED}`,

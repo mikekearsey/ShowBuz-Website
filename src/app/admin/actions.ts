@@ -16,6 +16,7 @@ import {
 } from "@/lib/admin/catalog";
 import {
   isReviewSchemaMissing,
+  setCatalogArchived,
   setCatalogReviewStatus,
   type CatalogReviewStatus,
 } from "@/lib/admin/catalog-review";
@@ -52,6 +53,9 @@ async function requireConfiguredAdmin(email: string) {
   }
 }
 
+// Every exported admin action must call requireAdminEmail() first,
+// apart from loginAction and logoutAction.
+
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
@@ -83,6 +87,7 @@ export async function logoutAction() {
 }
 
 export async function refreshShowAction(formData: FormData) {
+  await requireAdminEmail();
   const id = String(formData.get("productionId") ?? "");
   const production = await getProduction(id);
   if (!production) redirect("/admin");
@@ -95,6 +100,7 @@ export async function refreshShowAction(formData: FormData) {
 }
 
 export async function addCurtainAction(formData: FormData) {
+  await requireAdminEmail();
   const productionId = String(formData.get("productionId") ?? "");
   const date = String(formData.get("date") ?? "");
   const time = String(formData.get("time") ?? "");
@@ -120,6 +126,7 @@ export async function addCurtainAction(formData: FormData) {
 }
 
 export async function deleteCurtainAction(formData: FormData) {
+  await requireAdminEmail();
   const productionId = String(formData.get("productionId") ?? "");
   const curtainId = String(formData.get("curtainId") ?? "");
   if (!productionId || !curtainId) {
@@ -134,6 +141,7 @@ export async function deleteCurtainAction(formData: FormData) {
 }
 
 export async function restoreCurtainAction(formData: FormData) {
+  await requireAdminEmail();
   const productionId = String(formData.get("productionId") ?? "");
   const curtainId = String(formData.get("curtainId") ?? "");
   if (!productionId || !curtainId) {
@@ -148,6 +156,7 @@ export async function restoreCurtainAction(formData: FormData) {
 }
 
 export async function confirmMonthAction(formData: FormData) {
+  await requireAdminEmail();
   const productionId = String(formData.get("productionId") ?? "");
   const yearMonth = String(formData.get("yearMonth") ?? "");
   if (!productionId || !/^\d{4}-\d{2}$/.test(yearMonth)) {
@@ -169,6 +178,7 @@ const REVIEW_STATUSES = new Set<CatalogReviewStatus>([
 ]);
 
 export async function setCatalogReviewAction(formData: FormData) {
+  await requireAdminEmail();
   const id = String(formData.get("productionId") ?? "").trim();
   const status = String(formData.get("status") ?? "").trim();
   const reasonRaw = String(formData.get("reason") ?? "").trim();
@@ -191,12 +201,43 @@ export async function setCatalogReviewAction(formData: FormData) {
   redirect("/admin/review?ok=review");
 }
 
+export async function setCatalogArchivedAction(formData: FormData) {
+  await requireAdminEmail();
+  const id = String(formData.get("productionId") ?? "").trim();
+  const archivedRaw = String(formData.get("archived") ?? "").trim().toLowerCase();
+  const archived = archivedRaw === "true" || archivedRaw === "1";
+  const kindRaw = String(formData.get("listingKind") ?? "").trim();
+  const listingKind = kindRaw === "resident" || kindRaw === "touring" ? kindRaw : null;
+  const reasonRaw = String(formData.get("reason") ?? "").trim();
+  const reason = reasonRaw ? reasonRaw.slice(0, 500) : null;
+  const fallback = listingKind ? `/admin/${listingKind}` : "/admin";
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+  ) {
+    redirect(`${fallback}?error=archive`);
+  }
+  try {
+    await setCatalogArchived(id, archived, reason);
+  } catch {
+    redirect(`${fallback}?error=archive`);
+  }
+  revalidatePath("/admin/resident");
+  revalidatePath("/admin/touring");
+  revalidatePath(`/admin/shows/${id}`);
+  const status = archived ? "archived" : undefined;
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  const q = params.toString();
+  redirect(listingKind ? `/admin/${listingKind}${q ? `?${q}` : ""}` : "/admin");
+}
+
 export async function refreshShowWithProgress(
   productionId: string,
 ): Promise<RefreshShowResult> {
-  const production = await getProduction(productionId);
-  if (!production) return { ok: false, error: "Show not found." };
   try {
+    await requireAdminEmail();
+    const production = await getProduction(productionId);
+    if (!production) return { ok: false, error: "Show not found." };
     const raw = await refreshProduction(production);
     const result = (raw ?? {}) as Record<string, unknown>;
     return {
