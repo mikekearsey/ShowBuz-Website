@@ -133,15 +133,14 @@ export function OfficialTourLink({
         </form>
       ) : (
         <>
-          {safe ? (
-            <a href={safe} target="_blank" rel="noreferrer">
-              {shortUrl(safe)}
-            </a>
-          ) : (
-            <span className="admin-muted">No official page</span>
-          )}
-          {label ? <span className="admin-source-label">{label}</span> : null}
-          {waiting ? <span className="admin-recheck">Re-checking…</span> : null}
+          <div className="admin-official-row">
+            {safe ? (
+              <a href={safe} target="_blank" rel="noreferrer">
+                {shortUrl(safe)}
+              </a>
+            ) : (
+              <span className="admin-muted">No official page</span>
+            )}
             <button
               type="button"
               className="admin-tiny"
@@ -152,6 +151,9 @@ export function OfficialTourLink({
             >
               Edit
             </button>
+          </div>
+          {label ? <span className="admin-source-label">{label}</span> : null}
+          {waiting ? <span className="admin-recheck">Re-checking…</span> : null}
         </>
       )}
       {error ? <span className="admin-field-error">{error}</span> : null}

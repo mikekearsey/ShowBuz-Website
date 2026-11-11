@@ -1307,7 +1307,28 @@ h3 {
 }
 
 .admin-table .admin-official {
-  margin-top: 0;
+  margin-top: 5px;
+  white-space: nowrap;
+}
+
+.admin-table .admin-official a {
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.admin-table.top td {
+  vertical-align: top;
+}
+
+.admin-table .admin-official-row {
+  flex-wrap: nowrap;
+}
+
+.admin-official-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .admin-official a {

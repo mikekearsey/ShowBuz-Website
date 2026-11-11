@@ -315,7 +315,7 @@ export async function CatalogShowsList({
       ) : null}
 
       <div className="admin-table-wrap">
-        <table className="admin-table">
+        <table className="admin-table top">
           <thead>
             <tr>
               <th>Show</th>
@@ -323,7 +323,6 @@ export async function CatalogShowsList({
               {kind === "touring" ? <th>First curtain</th> : <th>Start</th>}
               {kind === "touring" ? <th>Last curtain</th> : <th>Finish</th>}
               {kind === "touring" ? <th>Coverage</th> : null}
-              {kind === "touring" ? <th>Official page</th> : null}
               <th>Scrape</th>
             </tr>
           </thead>
@@ -350,6 +349,14 @@ export async function CatalogShowsList({
                   {needsReviewIds.has(show.id) ? (
                     <span className={styles.badge}>Needs review</span>
                   ) : null}
+                  {kind === "touring" ? (
+                    <OfficialTourLink
+                      productionId={show.id}
+                      url={cov?.officialTourUrl ?? null}
+                      source={cov?.officialTourUrlSource ?? null}
+                      rechecking={cov ? tourIsRechecking(cov) : false}
+                    />
+                  ) : null}
                 </td>
                 <td>
                   {venueSummaryForShow(
@@ -363,16 +370,6 @@ export async function CatalogShowsList({
                 <td>{formatAdminDate(lastCurtain)}</td>
                 {kind === "touring" ? (
                   <td>{formatStopCoverage(timed, future)}</td>
-                ) : null}
-                {kind === "touring" ? (
-                  <td className="wrap">
-                    <OfficialTourLink
-                      productionId={show.id}
-                      url={cov?.officialTourUrl ?? null}
-                      source={cov?.officialTourUrlSource ?? null}
-                      rechecking={cov ? tourIsRechecking(cov) : false}
-                    />
-                  </td>
                 ) : null}
                 <td>
                   <ScrapeStatusDetail production={show} />
