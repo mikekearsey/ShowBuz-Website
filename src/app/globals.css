@@ -1576,6 +1576,17 @@ a.admin-tour-times-pill.solid {
   font-variant-numeric: tabular-nums;
 }
 
+.admin-tour-times-time:not(:placeholder-shown) {
+  font-weight: 700;
+  color: #111;
+}
+
+.admin-tour-times-time::placeholder {
+  color: #c8c8c8;
+  font-weight: 400;
+  opacity: 1;
+}
+
 .admin-tour-times-time:disabled {
   background: #f5f5f5;
   color: #999;
