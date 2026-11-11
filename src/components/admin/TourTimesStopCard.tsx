@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveTourStopTimesAction } from "@/app/admin/actions";
 import {
@@ -78,6 +78,9 @@ function collectStamps(days: DayDraft[]): {
   return { stamps, error: null };
 }
 
+const DEFAULT_TIME1 = "14:30";
+const DEFAULT_TIME2 = "19:30";
+
 export function TourTimesStopCard({ stop }: { stop: TourTimesNeedStop }) {
   const router = useRouter();
   const initial = useMemo(() => buildInitialDays(stop), [stop]);
@@ -85,6 +88,10 @@ export function TourTimesStopCard({ stop }: { stop: TourTimesNeedStop }) {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
+  // Faded hint in empty boxes; follows the last good time typed in that column.
+  const [hint1, setHint1] = useState(DEFAULT_TIME1);
+  const [hint2, setHint2] = useState(DEFAULT_TIME2);
+  const listRef = useRef<HTMLUListElement>(null);
 
   const preview = useMemo(() => {
     const { stamps, error: previewError } = collectStamps(days);
@@ -103,8 +110,41 @@ export function TourTimesStopCard({ stop }: { stop: TourTimesNeedStop }) {
     );
   }
 
+  function changeTime(date: string, column: 1 | 2, value: string) {
+    updateDay(date, column === 1 ? { time1: value } : { time2: value });
+    const good = normalizeTime(value);
+    if (good) (column === 1 ? setHint1 : setHint2)(good);
+  }
+
+  // Return: empty box takes the hint, then focus moves to the same box on the next open day.
+  function onTimeKeyDown(
+    event: React.KeyboardEvent<HTMLInputElement>,
+    index: number,
+    column: 1 | 2,
+  ) {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    const day = days[index];
+    const current = column === 1 ? day.time1 : day.time2;
+    if (!current.trim()) {
+      updateDay(day.date, column === 1 ? { time1: hint1 } : { time2: hint2 });
+    }
+    const inputs = listRef.current?.querySelectorAll<HTMLInputElement>(
+      `input[data-time-col="${column}"]`,
+    );
+    if (!inputs) return;
+    for (let i = index + 1; i < inputs.length; i++) {
+      if (!inputs[i].disabled) {
+        inputs[i].focus();
+        return;
+      }
+    }
+  }
+
   function reset() {
     setDays(buildInitialDays(stop));
+    setHint1(DEFAULT_TIME1);
+    setHint2(DEFAULT_TIME2);
     setError(null);
     setSaved(false);
   }
@@ -156,29 +196,33 @@ export function TourTimesStopCard({ stop }: { stop: TourTimesNeedStop }) {
         ) : null}
       </header>
 
-      <ul className="admin-tour-times-days">
-        {days.map((day) => (
+      <ul ref={listRef} className="admin-tour-times-days">
+        {days.map((day, index) => (
           <li key={day.date} className="admin-tour-times-day">
             <span className="admin-tour-times-day-label">{formatRunDayLabel(day.date)}</span>
             <input
               type="text"
               inputMode="numeric"
-              placeholder="HH:MM"
+              placeholder={hint1}
               aria-label={`${formatRunDayLabel(day.date)} first time`}
+              data-time-col="1"
               className="admin-tour-times-time"
               value={day.time1}
               disabled={day.noShow || pending}
-              onChange={(event) => updateDay(day.date, { time1: event.target.value })}
+              onChange={(event) => changeTime(day.date, 1, event.target.value)}
+              onKeyDown={(event) => onTimeKeyDown(event, index, 1)}
             />
             <input
               type="text"
               inputMode="numeric"
-              placeholder="HH:MM"
+              placeholder={hint2}
               aria-label={`${formatRunDayLabel(day.date)} second time`}
+              data-time-col="2"
               className="admin-tour-times-time"
               value={day.time2}
               disabled={day.noShow || pending}
-              onChange={(event) => updateDay(day.date, { time2: event.target.value })}
+              onChange={(event) => changeTime(day.date, 2, event.target.value)}
+              onKeyDown={(event) => onTimeKeyDown(event, index, 2)}
             />
             <label className="admin-tour-times-noshow">
               <input
