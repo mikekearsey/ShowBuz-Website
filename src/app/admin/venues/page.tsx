@@ -1,12 +1,10 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { logoutAction } from "../actions";
 import { AdminKindTabs } from "@/components/admin/AdminKindTabs";
 import { VenueRow } from "@/components/admin/VenueRow";
+import { requireAdminAccess } from "@/lib/admin/admin-access";
 import { loadCatalogReview } from "@/lib/admin/catalog-review";
 import { loadVenues } from "@/lib/admin/coverage";
-import { adminCookieName, readAdminEmail } from "@/lib/admin/session";
 import { loadTourTimesTabCount } from "@/lib/admin/tour-times";
 
 export default async function VenuesPage({
@@ -14,9 +12,7 @@ export default async function VenuesPage({
 }: {
   searchParams: Promise<{ status?: string; ok?: string; error?: string }>;
 }) {
-  const jar = await cookies();
-  const email = await readAdminEmail(jar.get(adminCookieName)?.value);
-  if (!email) redirect("/admin/login");
+  const { email } = await requireAdminAccess();
 
   const query = await searchParams;
   const status = query.status === "confirmed" || query.status === "unsure" ? query.status : "all";
@@ -48,11 +44,16 @@ export default async function VenuesPage({
             until you confirm them.
           </p>
         </div>
-        <form action={logoutAction}>
-          <button type="submit" className="admin-ghost">
-            Sign out {email}
-          </button>
-        </form>
+        <div className="admin-top-actions">
+          <Link href="/admin/two-step" className="admin-ghost">
+            Two-step
+          </Link>
+          <form action={logoutAction}>
+            <button type="submit" className="admin-ghost">
+              Sign out {email}
+            </button>
+          </form>
+        </div>
       </header>
 
       <div className="admin-list-nav">

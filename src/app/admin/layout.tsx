@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AdminIdleSessionGuard } from "@/components/admin/AdminIdleSessionGuard";
 
 export const metadata: Metadata = {
   title: "Admin",
@@ -12,6 +13,7 @@ export default function AdminLayout({
 }) {
   return (
     <div className="admin-app">
+      <AdminIdleSessionGuard />
       <div className="admin-shell">{children}</div>
     </div>
   );

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { logoutAction, setCatalogReviewAction } from "@/app/admin/actions";
 import { AdminKindTabs } from "@/components/admin/AdminKindTabs";
 import styles from "@/components/admin/catalog-review.module.css";
@@ -41,11 +42,16 @@ export function CatalogReviewQueue({
             catalogue. Rejected shows stay hidden and are not added again.
           </p>
         </div>
-        <form action={logoutAction}>
-          <button type="submit" className="admin-ghost">
-            Sign out {email}
-          </button>
-        </form>
+        <div className="admin-top-actions">
+          <Link href="/admin/two-step" className="admin-ghost">
+            Two-step
+          </Link>
+          <form action={logoutAction}>
+            <button type="submit" className="admin-ghost">
+              Sign out {email}
+            </button>
+          </form>
+        </div>
       </header>
 
       <div className="admin-list-nav">

@@ -1,12 +1,10 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { logoutAction } from "../actions";
 import { AdminKindTabs } from "@/components/admin/AdminKindTabs";
 import { FlaggedNightRow } from "@/components/admin/FlaggedNightRow";
+import { requireAdminAccess } from "@/lib/admin/admin-access";
 import { loadCatalogReview } from "@/lib/admin/catalog-review";
 import { loadFlaggedNights, type FlaggedNight } from "@/lib/admin/coverage";
-import { adminCookieName, readAdminEmail } from "@/lib/admin/session";
 import { loadTourTimesTabCount } from "@/lib/admin/tour-times";
 
 function groupNights(nights: FlaggedNight[]): Array<{
@@ -36,9 +34,7 @@ export default async function NeedsALookPage({
 }: {
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
-  const jar = await cookies();
-  const email = await readAdminEmail(jar.get(adminCookieName)?.value);
-  if (!email) redirect("/admin/login");
+  const { email } = await requireAdminAccess();
 
   const query = await searchParams;
   let snapshot: Awaited<ReturnType<typeof loadFlaggedNights>>;
@@ -65,11 +61,16 @@ export default async function NeedsALookPage({
             superseded. Nothing on this page is deleted.
           </p>
         </div>
-        <form action={logoutAction}>
-          <button type="submit" className="admin-ghost">
-            Sign out {email}
-          </button>
-        </form>
+        <div className="admin-top-actions">
+          <Link href="/admin/two-step" className="admin-ghost">
+            Two-step
+          </Link>
+          <form action={logoutAction}>
+            <button type="submit" className="admin-ghost">
+              Sign out {email}
+            </button>
+          </form>
+        </div>
       </header>
 
       <div className="admin-list-nav">

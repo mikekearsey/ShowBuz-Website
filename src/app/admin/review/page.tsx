@@ -1,8 +1,6 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { CatalogReviewQueue } from "@/components/admin/CatalogReviewQueue";
+import { requireAdminAccess } from "@/lib/admin/admin-access";
 import { loadCatalogReview } from "@/lib/admin/catalog-review";
-import { adminCookieName, readAdminEmail } from "@/lib/admin/session";
 import { loadTourTimesTabCount } from "@/lib/admin/tour-times";
 
 export default async function AdminReviewPage({
@@ -10,9 +8,7 @@ export default async function AdminReviewPage({
 }: {
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
-  const jar = await cookies();
-  const email = await readAdminEmail(jar.get(adminCookieName)?.value);
-  if (!email) redirect("/admin/login");
+  const { email } = await requireAdminAccess();
 
   let review: Awaited<ReturnType<typeof loadCatalogReview>>;
   try {

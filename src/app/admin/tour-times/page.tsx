@@ -1,24 +1,21 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import Link from "next/link";
 import { logoutAction } from "../actions";
 import { AdminKindTabs } from "@/components/admin/AdminKindTabs";
 import { TourTimesStopCard } from "@/components/admin/TourTimesStopCard";
+import { requireAdminAccess } from "@/lib/admin/admin-access";
 import { loadCatalogReview } from "@/lib/admin/catalog-review";
 import {
   formatCurtainPreview,
   formatStopDateRange,
   loadTourTimesAttention,
 } from "@/lib/admin/tour-times";
-import { adminCookieName, readAdminEmail } from "@/lib/admin/session";
 
 function venueLine(venueName: string, city: string): string {
   return [venueName, city].filter(Boolean).join(", ");
 }
 
 export default async function AdminTourTimesPage() {
-  const jar = await cookies();
-  const email = await readAdminEmail(jar.get(adminCookieName)?.value);
-  if (!email) redirect("/admin/login");
+  const { email } = await requireAdminAccess();
 
   let failed = false;
   let snapshot: Awaited<ReturnType<typeof loadTourTimesAttention>>;
@@ -51,11 +48,16 @@ export default async function AdminTourTimesPage() {
             only what the box office shows.
           </p>
         </div>
-        <form action={logoutAction}>
-          <button type="submit" className="admin-ghost">
-            Sign out {email}
-          </button>
-        </form>
+        <div className="admin-top-actions">
+          <Link href="/admin/two-step" className="admin-ghost">
+            Two-step
+          </Link>
+          <form action={logoutAction}>
+            <button type="submit" className="admin-ghost">
+              Sign out {email}
+            </button>
+          </form>
+        </div>
       </header>
 
       <div className="admin-list-nav">

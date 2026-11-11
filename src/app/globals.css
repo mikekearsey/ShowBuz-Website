@@ -1783,3 +1783,86 @@ a.admin-tour-times-pill.solid {
     grid-area: noshow;
   }
 }
+
+.admin-two-step-panel {
+  margin: 21px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  max-width: 32rem;
+}
+
+.admin-two-step-qr {
+  display: block;
+  width: 192px;
+  height: 192px;
+  margin: 0 auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px;
+}
+
+.admin-two-step-secret {
+  margin: 0;
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  word-break: break-all;
+}
+
+.admin-two-step-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.admin-two-step-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 13px;
+  padding: 13px 21px;
+  border-top: 1px solid #eee;
+}
+
+.admin-two-step-row:first-child {
+  border-top: 0;
+}
+
+.admin-two-step-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-two-step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 13px;
+}
+
+.admin-top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 13px;
+}
+
+.admin-top-actions a.admin-ghost {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  background: transparent;
+}

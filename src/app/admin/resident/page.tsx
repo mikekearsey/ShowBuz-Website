@@ -1,16 +1,12 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { CatalogShowsList } from "@/components/admin/CatalogShowsList";
-import { adminCookieName, readAdminEmail } from "@/lib/admin/session";
+import { requireAdminAccess } from "@/lib/admin/admin-access";
 
 export default async function AdminResidentPage({
   searchParams,
 }: {
   searchParams: Promise<{ status?: string; rejected?: string }>;
 }) {
-  const jar = await cookies();
-  const email = await readAdminEmail(jar.get(adminCookieName)?.value);
-  if (!email) redirect("/admin/login");
+  const { email } = await requireAdminAccess();
 
   const query = await searchParams;
   return (

@@ -4,13 +4,18 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
+  adminHasVerifiedFactor,
+  getAdminMfaLevel,
+  isNextRedirectError,
+  requireAdminAccess,
+} from "@/lib/admin/admin-access";
+import {
   addCurtain,
   confirmCatalogMonth,
   getProduction,
   listPerformances,
   refreshProduction,
   restoreCurtain,
-  signInWithPassword,
   suppressCurtain,
   type RefreshShowResult,
 } from "@/lib/admin/catalog";
@@ -33,61 +38,92 @@ import {
   updateVenueDetails,
 } from "@/lib/admin/coverage";
 import { plainAdminError } from "@/lib/admin/schema";
-import { adminCookieName, createAdminToken, isAllowedAdminEmail, readAdminEmail } from "@/lib/admin/session";
+import { safeAdminPath } from "@/lib/admin/safe-path";
+import { adminCookieName, isAllowedAdminEmail } from "@/lib/admin/session";
+import { createAdminSupabaseServerClient } from "@/lib/admin/supabase/server";
 import {
   setTourStopTimes,
   tourTimesActionError,
   type TourCurtainStamp,
 } from "@/lib/admin/tour-times";
 
-async function requireAdminEmail(): Promise<string> {
-  const jar = await cookies();
-  const email = await readAdminEmail(jar.get(adminCookieName)?.value);
-  if (!email) throw new Error("Sign in required.");
-  return email;
-}
-
-async function requireConfiguredAdmin(email: string) {
-  if (!isAllowedAdminEmail(email)) {
-    throw new Error("This account is not allowed to use Admin.");
-  }
-}
-
-// Every exported admin action must call requireAdminEmail() first,
+// Every exported admin action must call requireAdminAccess() first,
 // apart from loginAction and logoutAction.
+
+function clearLegacyAdminCookie(
+  jar: Awaited<ReturnType<typeof cookies>>,
+) {
+  jar.set(adminCookieName, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
+}
 
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const nextRaw = String(formData.get("next") ?? "").trim();
+  const nextPath = safeAdminPath(nextRaw || null);
   if (!email || !password) {
     redirect("/admin/login?error=missing");
   }
-  try {
-    const session = await signInWithPassword(email, password);
-    await requireConfiguredAdmin(session.email);
-    const token = await createAdminToken(session.email);
-    const jar = await cookies();
-    jar.set(adminCookieName, token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
-  } catch {
+
+  const supabase = await createAdminSupabaseServerClient();
+  const jar = await cookies();
+  clearLegacyAdminCookie(jar);
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) {
     redirect("/admin/login?error=auth");
   }
-  redirect("/admin");
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const signedEmail = user?.email?.trim().toLowerCase() ?? "";
+  if (!signedEmail || !isAllowedAdminEmail(signedEmail)) {
+    await supabase.auth.signOut({ scope: "local" });
+    clearLegacyAdminCookie(jar);
+    redirect("/admin/login?error=auth");
+  }
+
+  const aal = user ? await getAdminMfaLevel(supabase, user) : null;
+  const needsCode = aal
+    ? aal.nextLevel === "aal2" && aal.currentLevel !== "aal2"
+    : Boolean(user && adminHasVerifiedFactor(user));
+  if (needsCode) {
+    const verify = new URLSearchParams();
+    if (nextPath !== "/admin") verify.set("next", nextPath);
+    redirect(
+      verify.size > 0
+        ? `/admin/login/verify?${verify.toString()}`
+        : "/admin/login/verify",
+    );
+  }
+
+  redirect(nextPath);
 }
 
 export async function logoutAction() {
   const jar = await cookies();
-  jar.delete(adminCookieName);
+  clearLegacyAdminCookie(jar);
+  try {
+    const supabase = await createAdminSupabaseServerClient();
+    await supabase.auth.signOut({ scope: "local" });
+  } catch {
+    // Still send them to login even if Auth is unreachable.
+  }
   redirect("/admin/login");
 }
 
 export async function refreshShowAction(formData: FormData) {
-  await requireAdminEmail();
+  await requireAdminAccess();
   const id = String(formData.get("productionId") ?? "");
   const production = await getProduction(id);
   if (!production) redirect("/admin");
@@ -100,7 +136,7 @@ export async function refreshShowAction(formData: FormData) {
 }
 
 export async function addCurtainAction(formData: FormData) {
-  await requireAdminEmail();
+  await requireAdminAccess();
   const productionId = String(formData.get("productionId") ?? "");
   const date = String(formData.get("date") ?? "");
   const time = String(formData.get("time") ?? "");
@@ -126,7 +162,7 @@ export async function addCurtainAction(formData: FormData) {
 }
 
 export async function deleteCurtainAction(formData: FormData) {
-  await requireAdminEmail();
+  await requireAdminAccess();
   const productionId = String(formData.get("productionId") ?? "");
   const curtainId = String(formData.get("curtainId") ?? "");
   if (!productionId || !curtainId) {
@@ -141,7 +177,7 @@ export async function deleteCurtainAction(formData: FormData) {
 }
 
 export async function restoreCurtainAction(formData: FormData) {
-  await requireAdminEmail();
+  await requireAdminAccess();
   const productionId = String(formData.get("productionId") ?? "");
   const curtainId = String(formData.get("curtainId") ?? "");
   if (!productionId || !curtainId) {
@@ -156,7 +192,7 @@ export async function restoreCurtainAction(formData: FormData) {
 }
 
 export async function confirmMonthAction(formData: FormData) {
-  await requireAdminEmail();
+  await requireAdminAccess();
   const productionId = String(formData.get("productionId") ?? "");
   const yearMonth = String(formData.get("yearMonth") ?? "");
   if (!productionId || !/^\d{4}-\d{2}$/.test(yearMonth)) {
@@ -178,7 +214,7 @@ const REVIEW_STATUSES = new Set<CatalogReviewStatus>([
 ]);
 
 export async function setCatalogReviewAction(formData: FormData) {
-  await requireAdminEmail();
+  await requireAdminAccess();
   const id = String(formData.get("productionId") ?? "").trim();
   const status = String(formData.get("status") ?? "").trim();
   const reasonRaw = String(formData.get("reason") ?? "").trim();
@@ -202,7 +238,7 @@ export async function setCatalogReviewAction(formData: FormData) {
 }
 
 export async function setCatalogArchivedAction(formData: FormData) {
-  await requireAdminEmail();
+  await requireAdminAccess();
   const id = String(formData.get("productionId") ?? "").trim();
   const archivedRaw = String(formData.get("archived") ?? "").trim().toLowerCase();
   const archived = archivedRaw === "true" || archivedRaw === "1";
@@ -235,7 +271,7 @@ export async function refreshShowWithProgress(
   productionId: string,
 ): Promise<RefreshShowResult> {
   try {
-    await requireAdminEmail();
+    await requireAdminAccess();
     const production = await getProduction(productionId);
     if (!production) return { ok: false, error: "Show not found." };
     const raw = await refreshProduction(production);
@@ -255,6 +291,7 @@ export async function refreshShowWithProgress(
       venueRuns: typeof result.venueRuns === "number" ? result.venueRuns : undefined,
     };
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     return {
       ok: false,
       error: error instanceof Error ? error.message : "Refresh failed.",
@@ -267,9 +304,10 @@ export async function setOfficialTourUrlAction(
   url: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
-    await requireAdminEmail();
+    await requireAdminAccess();
     await setOfficialTourUrl(productionId, url);
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     return { ok: false, error: plainAdminError(error) };
   }
   revalidatePath("/admin/touring");
@@ -281,8 +319,9 @@ export async function tourRecheckStatusAction(
   productionId: string,
 ): Promise<{ done: boolean }> {
   try {
-    await requireAdminEmail();
-  } catch {
+    await requireAdminAccess();
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     return { done: false };
   }
   if (!isUuid(productionId)) return { done: true };
@@ -304,10 +343,11 @@ export async function previewSourceAction(input: {
   | { ok: false; error: string }
 > {
   try {
-    await requireAdminEmail();
+    await requireAdminAccess();
     const preview = await previewSourceUrl(input);
     return { ok: true, source: preview.source, curtains: preview.curtains };
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     return { ok: false, error: plainAdminError(error) };
   }
 }
@@ -321,9 +361,10 @@ export async function applySourceOverrideAction(input: {
   venueId?: string | null;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
-    await requireAdminEmail();
+    await requireAdminAccess();
     await applySourceOverride(input);
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     return { ok: false, error: plainAdminError(error) };
   }
   if (input.productionId && isUuid(input.productionId)) {
@@ -336,11 +377,11 @@ export async function applySourceOverrideAction(input: {
 }
 
 export async function keepFlaggedNightAction(formData: FormData) {
+  await requireAdminAccess();
   const id = String(formData.get("nightId") ?? "");
   const productionId = String(formData.get("productionId") ?? "");
   if (!isUuid(id)) redirect("/admin/look?error=keep");
   try {
-    await requireAdminEmail();
     await keepFlaggedNight(id);
   } catch {
     redirect("/admin/look?error=keep");
@@ -351,11 +392,11 @@ export async function keepFlaggedNightAction(formData: FormData) {
 }
 
 export async function hideFlaggedNightAction(formData: FormData) {
+  await requireAdminAccess();
   const id = String(formData.get("nightId") ?? "");
   const productionId = String(formData.get("productionId") ?? "");
   if (!isUuid(id)) redirect("/admin/look?error=hide");
   try {
-    await requireAdminEmail();
     await hideFlaggedNight(id);
   } catch {
     redirect("/admin/look?error=hide");
@@ -372,9 +413,10 @@ export async function updateVenueAction(input: {
   platform: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
-    await requireAdminEmail();
+    await requireAdminAccess();
     await updateVenueDetails(input.id, input);
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     return { ok: false, error: plainAdminError(error) };
   }
   revalidatePath("/admin/venues");
@@ -382,10 +424,10 @@ export async function updateVenueAction(input: {
 }
 
 export async function confirmVenueAction(formData: FormData) {
+  await requireAdminAccess();
   const id = String(formData.get("venueId") ?? "");
   if (!isUuid(id)) redirect("/admin/venues?error=confirm");
   try {
-    await requireAdminEmail();
     await confirmVenue(id);
   } catch {
     redirect("/admin/venues?error=confirm");
@@ -399,7 +441,7 @@ export async function saveTourStopTimesAction(input: {
   datesTimes: TourCurtainStamp[];
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
-    const email = await requireAdminEmail();
+    const { email } = await requireAdminAccess();
     if (!isUuid(input.runId)) {
       return { ok: false, error: "That stop could not be found." };
     }
@@ -422,6 +464,7 @@ export async function saveTourStopTimesAction(input: {
       setBy: email,
     });
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     return { ok: false, error: tourTimesActionError(error) };
   }
   revalidatePath("/admin/tour-times");

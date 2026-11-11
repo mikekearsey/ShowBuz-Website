@@ -724,35 +724,3 @@ export async function refreshProduction(production: CatalogProduction): Promise<
     return { ok: true };
   }
 }
-
-export async function signInWithPassword(
-  email: string,
-  password: string,
-): Promise<{ email: string }> {
-  const response = await fetch(
-    `${supabaseUrl()}/auth/v1/token?grant_type=password`,
-    {
-      method: "POST",
-      headers: {
-        apikey: anonKey(),
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-      cache: "no-store",
-    },
-  );
-  const data = (await response.json()) as {
-    user?: { email?: string };
-    error_description?: string;
-    msg?: string;
-    error?: string;
-  };
-  if (!response.ok) {
-    throw new Error(
-      data.error_description ?? data.msg ?? data.error ?? "Could not sign in.",
-    );
-  }
-  const signedEmail = data.user?.email;
-  if (!signedEmail) throw new Error("Sign-in did not return an email.");
-  return { email: signedEmail };
-}

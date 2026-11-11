@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import {
   addCurtainAction,
   confirmMonthAction,
@@ -11,6 +10,7 @@ import { CurtainRow } from "@/components/admin/CurtainRow";
 import { OfficialTourLink } from "@/components/admin/OfficialTourLink";
 import { RefreshScrapeDialog } from "@/components/admin/RefreshScrapeDialog";
 import { TourStops } from "@/components/admin/TourStops";
+import { requireAdminAccess } from "@/lib/admin/admin-access";
 import {
   formatTouringVenueSummaryFromRuns,
   getProduction,
@@ -27,7 +27,6 @@ import {
 import { loadTourCoverage, tourIsRechecking, type TourCoverage } from "@/lib/admin/coverage";
 import { formatStopCoverage } from "@/lib/admin/labels";
 import { formatAdminDate, formatAdminDateTime, formatLondonTime, londonYmd, londonYearMonth } from "@/lib/admin/london";
-import { adminCookieName, readAdminEmail } from "@/lib/admin/session";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -164,9 +163,7 @@ export default async function AdminShowPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ month?: string; venue?: string; ok?: string; error?: string }>;
 }) {
-  const jar = await cookies();
-  const email = await readAdminEmail(jar.get(adminCookieName)?.value);
-  if (!email) redirect("/admin/login");
+  await requireAdminAccess();
 
   const { id } = await params;
   const query = await searchParams;
@@ -345,11 +342,16 @@ export default async function AdminShowPage({
             </p>
           ) : null}
         </div>
-        <form action={logoutAction}>
-          <button type="submit" className="admin-ghost">
-            Sign out
-          </button>
-        </form>
+        <div className="admin-top-actions">
+          <Link href="/admin/two-step" className="admin-ghost">
+            Two-step
+          </Link>
+          <form action={logoutAction}>
+            <button type="submit" className="admin-ghost">
+              Sign out
+            </button>
+          </form>
+        </div>
       </header>
 
       {notice(query.ok) ? (

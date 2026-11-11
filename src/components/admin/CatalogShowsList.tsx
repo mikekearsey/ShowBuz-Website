@@ -224,11 +224,16 @@ export async function CatalogShowsList({
           <h1>{copy.title}</h1>
           <p className="admin-lead">{copy.lead}</p>
         </div>
-        <form action={logoutAction}>
-          <button type="submit" className="admin-ghost">
-            Sign out {email}
-          </button>
-        </form>
+        <div className="admin-top-actions">
+          <Link href="/admin/two-step" className="admin-ghost">
+            Two-step
+          </Link>
+          <form action={logoutAction}>
+            <button type="submit" className="admin-ghost">
+              Sign out {email}
+            </button>
+          </form>
+        </div>
       </header>
 
       <div className="admin-list-nav">
