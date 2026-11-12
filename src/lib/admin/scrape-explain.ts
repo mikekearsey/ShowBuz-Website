@@ -78,7 +78,7 @@ export function explainScrape(
           ...shared,
           headline: "Earlier dates are still saved.",
           summary:
-            "The latest scrape did not finish. Nights already in the catalog were left as they were, and nothing new was added from this attempt.",
+            "The latest scrape did not finish. Curtains already in the catalog were left as they were, and nothing new was added from this attempt.",
           noteLabel: "What the last attempt reported",
         };
       }
@@ -86,7 +86,7 @@ export function explainScrape(
         ...shared,
         headline: "The last scrape worked.",
         summary: touring
-          ? "Published tour nights were found and saved. Those dates can be loaded into a player's diary."
+          ? "Published tour curtains were found and saved. Those dates can be loaded into a player's diary."
           : "Published West End curtain times were found and saved. Those dates can be loaded into a player's diary.",
         noteLabel: null,
       };
@@ -95,7 +95,7 @@ export function explainScrape(
         ...shared,
         headline: touring ? "No published dates were found." : "No curtain times were found.",
         summary: touring
-          ? "The tour sources were checked and none of them listed performances or venue stops on sale. The title stays in the catalog so it can be scraped again when booking opens, or nights can be added by hand."
+          ? "The tour sources were checked and none of them listed performances or venue stops on sale. The title stays in the catalog so it can be scraped again when booking opens, or curtains can be added by hand."
           : "The West End sources were checked, but this title had no published performances. It may be closed, not on sale yet, or listed under a different name.",
         noteLabel: "Why there are no dates",
       };
@@ -104,7 +104,7 @@ export function explainScrape(
         ...shared,
         headline: "The scrape did not finish.",
         summary:
-          "No dates were saved from this attempt, and there were no earlier nights to keep. Try again from the show page once the source is reachable.",
+          "No dates were saved from this attempt, and there were no earlier curtains to keep. Try again from the show page once the source is reachable.",
         noteLabel: "What went wrong",
         technicalNote: technicalNote ?? "No further detail was stored for this failure.",
       };
@@ -122,7 +122,7 @@ export function explainScrape(
         ...shared,
         headline: "Automatic scrapes skip this show.",
         summary:
-          "Ignored titles are left out of the weekly job. Nights already stored stay as they are until someone edits them or scrapes the show by hand.",
+          "Ignored titles are left out of the weekly job. Curtains already stored stay as they are until someone edits them or scrapes the show by hand.",
         noteLabel: technicalNote ? "Note" : null,
       };
     default:

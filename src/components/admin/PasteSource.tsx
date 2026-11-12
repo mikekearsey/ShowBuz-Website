@@ -128,7 +128,7 @@ export function PasteSource({
           {pending && previewMatches ? "Saving…" : "Use this"}
         </button>
         {collapsed ? (
-          <button type="button" className="admin-tiny" onClick={() => setOpen(false)}>
+          <button type="button" className="admin-cancel" onClick={() => setOpen(false)}>
             Cancel
           </button>
         ) : null}

@@ -1,6 +1,7 @@
 import { ADMIN_SOURCE, ADMIN_SUPPRESSED_SOURCE, LONDON_TZ } from "./constants";
 import { londonWallTimeToIso } from "./london";
 import { isMissingSchema } from "./schema";
+import type { TourCurtainStamp, TourTimesNeedStop } from "./tour-times";
 
 type RestError = { message?: string; error?: string };
 
@@ -138,6 +139,8 @@ export type CatalogVenueRun = {
   times_source?: string | null;
   needs_review?: boolean;
   review_reason?: string | null;
+  /** IANA zone for the stop; blank means Europe/London. */
+  time_zone?: string | null;
 };
 
 /** Inclusive calendar-month span between two YYYY-MM-DD dates. */
@@ -574,7 +577,7 @@ export async function confirmCatalogMonth(
 
 const VENUE_RUN_BASE =
   "id,production_id,city,venue_name,start_date,end_date,ticket_url,source,sort_index";
-const VENUE_RUN_FULL = `${VENUE_RUN_BASE},book_url,times_url,times_status,booking_host,times_source,needs_review,review_reason`;
+const VENUE_RUN_FULL = `${VENUE_RUN_BASE},book_url,times_url,times_status,booking_host,times_source,needs_review,review_reason,time_zone`;
 
 function completeVenueRun(row: CatalogVenueRun): CatalogVenueRun {
   return {
@@ -586,6 +589,71 @@ function completeVenueRun(row: CatalogVenueRun): CatalogVenueRun {
     times_source: row.times_source ?? null,
     needs_review: Boolean(row.needs_review),
     review_reason: row.review_reason ?? null,
+    time_zone: row.time_zone ?? null,
+  };
+}
+
+/** Same venue match as the RPC: lower(btrim(venue_name)). btrim strips spaces only. */
+function stopVenueKey(name: string | null | undefined): string {
+  return (name ?? "").replace(/^ +| +$/g, "").toLowerCase();
+}
+
+/**
+ * One stop in the shape the Tour Times card edits, built from what the show
+ * page already loads. `nights` is every curtain on the calendar that
+ * `admin_set_tour_stop_times` would replace: same venue name, local date
+ * inside the stop's dates, read in the stop's own time zone. Pass the
+ * performances that are showing (not the removed ones).
+ * Null when the stop's time zone cannot be read here — no prefill is safer
+ * than a wrong one.
+ */
+export function tourTimesStopFromRun(
+  production: Pick<CatalogProduction, "id" | "name">,
+  run: CatalogVenueRun,
+  performances: CatalogPerformance[],
+): TourTimesNeedStop | null {
+  const timeZone = (run.time_zone ?? "").trim() || LONDON_TZ;
+  let wall: Intl.DateTimeFormat;
+  try {
+    wall = new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    });
+  } catch {
+    return null;
+  }
+  const venue = stopVenueKey(run.venue_name);
+  const nights: TourCurtainStamp[] = [];
+  for (const row of performances) {
+    if (stopVenueKey(row.venue_name) !== venue) continue;
+    const parts = new Map(
+      wall.formatToParts(new Date(row.starts_at)).map((part) => [part.type, part.value]),
+    );
+    const date = `${parts.get("year")}-${parts.get("month")}-${parts.get("day")}`;
+    if (date < run.start_date || date > run.end_date) continue;
+    nights.push({ date, time: `${parts.get("hour")}:${parts.get("minute")}` });
+  }
+  return {
+    runId: run.id,
+    productionId: production.id,
+    productionName: production.name,
+    venueName: run.venue_name,
+    city: run.city ?? "",
+    startDate: run.start_date,
+    endDate: run.end_date,
+    boxOfficeUrl:
+      (run.book_url ?? "").trim() ||
+      (run.times_url ?? "").trim() ||
+      (run.ticket_url ?? "").trim() ||
+      null,
+    reason: "",
+    nights,
+    timeZone,
   };
 }
 

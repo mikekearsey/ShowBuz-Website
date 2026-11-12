@@ -135,6 +135,23 @@ export async function refreshShowAction(formData: FormData) {
   redirect(`/admin/shows/${id}?ok=refresh`);
 }
 
+/**
+ * Show page address that keeps the calendar on a month (and the picked stop),
+ * so the curtain just changed is on screen under the banner.
+ */
+function showPagePath(
+  productionId: string,
+  flag: { ok?: string; error?: string },
+  keep: { month?: string; venue?: string } = {},
+): string {
+  const params = new URLSearchParams();
+  if (keep.month && /^\d{4}-\d{2}$/.test(keep.month)) params.set("month", keep.month);
+  if (keep.venue && keep.venue.length <= 200) params.set("venue", keep.venue);
+  if (flag.ok) params.set("ok", flag.ok);
+  if (flag.error) params.set("error", flag.error);
+  return `/admin/shows/${productionId}?${params.toString()}`;
+}
+
 export async function addCurtainAction(formData: FormData) {
   await requireAdminAccess();
   const productionId = String(formData.get("productionId") ?? "");
@@ -143,8 +160,13 @@ export async function addCurtainAction(formData: FormData) {
   const venueName = String(formData.get("venueName") ?? "");
   const venueCity = String(formData.get("venueCity") ?? "");
   const venueAddress = String(formData.get("venueAddress") ?? "");
+  // Land on the month of the date just typed, not the show's first month.
+  const keep = {
+    month: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.slice(0, 7) : undefined,
+    venue: String(formData.get("venue") ?? "").trim(),
+  };
   if (!productionId || !date || !time) {
-    redirect(`/admin/shows/${productionId}?error=curtain`);
+    redirect(showPagePath(productionId, { error: "curtain" }, keep));
   }
   try {
     await addCurtain({
@@ -156,39 +178,47 @@ export async function addCurtainAction(formData: FormData) {
       venueAddress,
     });
   } catch {
-    redirect(`/admin/shows/${productionId}?error=curtain`);
+    redirect(showPagePath(productionId, { error: "curtain" }, keep));
   }
-  redirect(`/admin/shows/${productionId}?ok=add`);
+  redirect(showPagePath(productionId, { ok: "add" }, keep));
 }
 
 export async function deleteCurtainAction(formData: FormData) {
   await requireAdminAccess();
   const productionId = String(formData.get("productionId") ?? "");
   const curtainId = String(formData.get("curtainId") ?? "");
+  const keep = {
+    month: String(formData.get("month") ?? "").trim(),
+    venue: String(formData.get("venue") ?? "").trim(),
+  };
   if (!productionId || !curtainId) {
     redirect("/admin");
   }
   try {
     await suppressCurtain(curtainId);
   } catch {
-    redirect(`/admin/shows/${productionId}?error=delete`);
+    redirect(showPagePath(productionId, { error: "delete" }, keep));
   }
-  redirect(`/admin/shows/${productionId}?ok=delete`);
+  redirect(showPagePath(productionId, { ok: "delete" }, keep));
 }
 
 export async function restoreCurtainAction(formData: FormData) {
   await requireAdminAccess();
   const productionId = String(formData.get("productionId") ?? "");
   const curtainId = String(formData.get("curtainId") ?? "");
+  const keep = {
+    month: String(formData.get("month") ?? "").trim(),
+    venue: String(formData.get("venue") ?? "").trim(),
+  };
   if (!productionId || !curtainId) {
     redirect("/admin");
   }
   try {
     await restoreCurtain(curtainId);
   } catch {
-    redirect(`/admin/shows/${productionId}?error=restore`);
+    redirect(showPagePath(productionId, { error: "restore" }, keep));
   }
-  redirect(`/admin/shows/${productionId}?ok=restore`);
+  redirect(showPagePath(productionId, { ok: "restore" }, keep));
 }
 
 export async function confirmMonthAction(formData: FormData) {
@@ -438,6 +468,8 @@ export async function confirmVenueAction(formData: FormData) {
 
 export async function saveTourStopTimesAction(input: {
   runId: string;
+  /** The stop's show. Only used to refresh that show's page after the save. */
+  productionId?: string;
   datesTimes: TourCurtainStamp[];
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
@@ -470,5 +502,8 @@ export async function saveTourStopTimesAction(input: {
   revalidatePath("/admin/tour-times");
   revalidatePath("/admin/touring");
   revalidatePath("/admin/look");
+  if (typeof input.productionId === "string" && isUuid(input.productionId)) {
+    revalidatePath(`/admin/shows/${input.productionId}`);
+  }
   return { ok: true };
 }

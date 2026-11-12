@@ -10,11 +10,16 @@ export function CurtainRow({
   curtainId,
   startsAt,
   locked,
+  returnMonth,
+  returnVenue,
 }: {
   productionId: string;
   curtainId: string;
   startsAt: string;
   locked: boolean;
+  /** Month (YYYY-MM) and picked stop to come back to after Remove. */
+  returnMonth?: string;
+  returnVenue?: string | null;
 }) {
   const [confirming, setConfirming] = useState(false);
   const clock = formatLondonTime(startsAt);
@@ -43,6 +48,8 @@ export function CurtainRow({
             <form action={deleteCurtainAction} className="admin-curtain-confirm-form">
               <input type="hidden" name="productionId" value={productionId} />
               <input type="hidden" name="curtainId" value={curtainId} />
+              {returnMonth ? <input type="hidden" name="month" value={returnMonth} /> : null}
+              {returnVenue ? <input type="hidden" name="venue" value={returnVenue} /> : null}
               <button type="submit" className="admin-curtain-remove-pill">
                 Remove
               </button>

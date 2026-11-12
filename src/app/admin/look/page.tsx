@@ -57,7 +57,7 @@ export default async function NeedsALookPage({
           <p className="admin-kicker">ShowBuz Admin</p>
           <h1>Needs a look</h1>
           <p className="admin-lead">
-            Flagged nights, grouped by tour. Keep leaves the night visible. Hide marks it
+            Flagged curtains, grouped by tour. Keep leaves the curtain visible. Hide marks it
             superseded. Nothing on this page is deleted.
           </p>
         </div>
@@ -85,35 +85,35 @@ export default async function NeedsALookPage({
 
       {query.ok === "keep" ? (
         <p className="admin-banner ok" role="status">
-          Night kept.
+          Curtain kept.
         </p>
       ) : null}
       {query.ok === "hide" ? (
         <p className="admin-banner ok" role="status">
-          Night hidden. The row is still stored.
+          Curtain hidden. The row is still stored.
         </p>
       ) : null}
       {query.error === "keep" ? (
         <p className="admin-banner error" role="alert">
-          Could not keep that night.
+          Could not keep that curtain.
         </p>
       ) : null}
       {query.error === "hide" ? (
         <p className="admin-banner error" role="alert">
-          Could not hide that night.
+          Could not hide that curtain.
         </p>
       ) : null}
 
       {failed ? (
         <p className="admin-banner error" role="alert">
-          Could not load flagged nights.
+          Could not load flagged curtains.
         </p>
       ) : null}
       {!failed && !snapshot.available ? (
-        <p className="admin-footnote">Flagged nights are not available on this server yet.</p>
+        <p className="admin-footnote">Flagged curtains are not available on this server yet.</p>
       ) : null}
       {!failed && snapshot.available && groups.length === 0 ? (
-        <p className="admin-footnote">No nights need a look.</p>
+        <p className="admin-footnote">No curtains need a look.</p>
       ) : null}
 
       <div className="admin-look-list">

@@ -4,6 +4,15 @@ type RestErrorBody = { message?: string; error?: string; code?: string; hint?: s
 
 export type TourCurtainStamp = { date: string; time: string };
 
+/**
+ * Before 17:00 = matinee; 17:00 or later = evening.
+ * Matches the scraper listingSlot rule (hour < 17).
+ */
+export function isMatineeTime(hhmm: string): boolean {
+  const hour = Number(hhmm.slice(0, 2));
+  return Number.isFinite(hour) && hour < 17;
+}
+
 export type TourTimesNeedStop = {
   runId: string;
   productionId: string;

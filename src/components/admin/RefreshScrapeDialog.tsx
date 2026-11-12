@@ -32,8 +32,8 @@ function stepsFor(kind: CatalogListingKind): Step[] {
       },
       {
         id: "save",
-        label: "Saving newly published nights",
-        detail: "Only adds nights outside months you have already confirmed.",
+        label: "Saving newly published curtains",
+        detail: "Only adds curtains outside months you have already confirmed.",
       },
     ];
   }
@@ -60,8 +60,8 @@ function stepsFor(kind: CatalogListingKind): Step[] {
     },
     {
       id: "save",
-      label: "Saving newly published nights",
-      detail: "Only adds nights outside months you have already confirmed.",
+      label: "Saving newly published curtains",
+      detail: "Only adds curtains outside months you have already confirmed.",
     },
   ];
 }
@@ -73,10 +73,11 @@ function resultSummary(result: RefreshShowResult): string {
   if (result.fromCache) {
     return "A recent scrape was still fresh, so the catalog reused the last result without hitting every site again.";
   }
+  // `result.nights` is the field name the refresh action returns; the words say curtains.
   const nights =
     typeof result.nights === "number"
-      ? `${result.nights} published night${result.nights === 1 ? "" : "s"} in the catalog`
-      : "Published nights updated";
+      ? `${result.nights} published curtain${result.nights === 1 ? "" : "s"} in the catalog`
+      : "Published curtains updated";
   const status = result.scrapeStatus ? ` Status: ${result.scrapeStatus}.` : "";
   const source = result.sourceProvider
     ? ` Main source noted as ${result.sourceProvider}.`
@@ -177,7 +178,7 @@ export function RefreshScrapeDialog({
 
             <p className="admin-lead">
               {listingKind === "touring"
-                ? "Looking for published tour nights across ticketing feeds and theatre sites."
+                ? "Looking for published tour curtains across ticketing feeds and theatre sites."
                 : "Looking for published West End curtain times across the usual listings sources."}
             </p>
 
@@ -215,7 +216,7 @@ export function RefreshScrapeDialog({
             ) : (
               <p className="admin-footnote">
                 This can take a minute. Confirmed months stay locked; later
-                months can still gain new nights.
+                months can still gain new curtains.
               </p>
             )}
           </div>

@@ -134,7 +134,7 @@ export function VenueRow({
               </button>
               <button
                 type="button"
-                className="admin-tiny"
+                className="admin-cancel"
                 onClick={() => {
                   setDomain(siteDomain ?? "");
                   setWhatsOn(whatsOnUrl ?? "");

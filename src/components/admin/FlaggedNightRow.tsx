@@ -53,11 +53,11 @@ export function FlaggedNightRow({
           <form action={hideFlaggedNightAction} className="admin-hide-confirm">
             <input type="hidden" name="nightId" value={id} />
             <input type="hidden" name="productionId" value={productionId} />
-            <p>Hide this night? It stays stored and is marked superseded.</p>
+            <p>Hide this curtain? It stays stored and is marked superseded.</p>
             <button type="submit" className="admin-compact">
               Hide
             </button>
-            <button type="button" className="admin-tiny" onClick={() => setHiding(false)}>
+            <button type="button" className="admin-cancel" onClick={() => setHiding(false)}>
               Cancel
             </button>
           </form>

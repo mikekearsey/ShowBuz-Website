@@ -9,34 +9,88 @@ import {
   formatRunDayLabel,
   formatStopDateRange,
   formatStopTimeZoneLabel,
+  isMatineeTime,
   type TourCurtainStamp,
   type TourTimesNeedStop,
 } from "@/lib/admin/tour-times";
 
 type DayDraft = {
   date: string;
+  /** Matinee box (usually before 17:00). */
   time1: string;
+  /** Evening box (usually 17:00 or later). */
   time2: string;
   noShow: boolean;
 };
 
+/** Distinct times on one day, earliest first. */
 function timesForDay(nights: TourCurtainStamp[], date: string): string[] {
-  return nights
-    .filter((night) => night.date === date)
-    .map((night) => night.time)
-    .sort();
+  return [
+    ...new Set(nights.filter((night) => night.date === date).map((night) => night.time)),
+  ].sort();
+}
+
+function stampKey(stamp: TourCurtainStamp): string {
+  return `${stamp.date}T${stamp.time}`;
+}
+
+/** "Tue 17 Nov 20:00" */
+function stampLabel(stamp: TourCurtainStamp): string {
+  return `${formatRunDayLabel(stamp.date)} ${stamp.time}`;
+}
+
+/** Days holding more curtains than the two boxes can show: date → how many. */
+function overfullDays(nights: TourCurtainStamp[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const date of new Set(nights.map((night) => night.date))) {
+    const count = timesForDay(nights, date).length;
+    if (count > 2) out.set(date, count);
+  }
+  return out;
+}
+
+/** Changes when the stop's stored curtains (or its dates) change. */
+function stopDataKey(stop: TourTimesNeedStop): string {
+  return [stop.startDate, stop.endDate, ...stop.nights.map(stampKey).sort()].join("|");
+}
+
+/** How many removed curtains the "Save anyway?" question names before "and N more". */
+const CONFIRM_LIST_MAX = 12;
+
+/** Place times into matinee / evening boxes by clock, not by list order. */
+function assignBoxes(times: string[]): { time1: string; time2: string } {
+  // A day with more than two is flagged on its row and Save is blocked (see overfullDays).
+  const a = times[0];
+  const b = times[1];
+  if (!a) return { time1: "", time2: "" };
+  if (!b) {
+    return isMatineeTime(a) ? { time1: a, time2: "" } : { time1: "", time2: a };
+  }
+  const aMat = isMatineeTime(a);
+  const bMat = isMatineeTime(b);
+  if (aMat && !bMat) return { time1: a, time2: b };
+  if (!aMat && bMat) return { time1: b, time2: a };
+  // Two afternoon or two evening: earlier → matinee box, later → evening box.
+  return { time1: a, time2: b };
 }
 
 function buildInitialDays(stop: TourTimesNeedStop): DayDraft[] {
   return eachRunDay(stop.startDate, stop.endDate).map((date) => {
-    const times = timesForDay(stop.nights, date);
-    return {
-      date,
-      time1: times[0] ?? "",
-      time2: times[1] ?? "",
-      noShow: false,
-    };
+    const { time1, time2 } = assignBoxes(timesForDay(stop.nights, date));
+    return { date, time1, time2, noShow: false };
   });
+}
+
+/** Muted row note when both filled boxes fall on the same side of 17:00. */
+function sameSlotNote(time1: string, time2: string): string | null {
+  const a = normalizeTime(time1);
+  const b = normalizeTime(time2);
+  if (!a || !b) return null;
+  const aMat = isMatineeTime(a);
+  const bMat = isMatineeTime(b);
+  if (aMat && bMat) return "Two afternoon times";
+  if (!aMat && !bMat) return "Two evening times";
+  return null;
 }
 
 function normalizeTime(raw: string): string | null {
@@ -82,10 +136,36 @@ function collectStamps(days: DayDraft[]): {
 const DEFAULT_TIME1 = "14:30";
 const DEFAULT_TIME2 = "19:30";
 
-export function TourTimesStopCard({ stop }: { stop: TourTimesNeedStop }) {
+export function TourTimesStopCard({
+  stop,
+  calendarMonth,
+}: {
+  stop: TourTimesNeedStop;
+  /**
+   * Show page only: the YYYY-MM its calendar is showing. After a save the page
+   * stays on this stop, and on this month unless only another month's days changed.
+   */
+  calendarMonth?: string;
+}) {
   const router = useRouter();
-  const initial = useMemo(() => buildInitialDays(stop), [stop]);
-  const [days, setDays] = useState<DayDraft[]>(initial);
+  const [days, setDays] = useState<DayDraft[]>(() => buildInitialDays(stop));
+  // The server sent different curtains for this stop (a save, or Remove / Restore
+  // on the calendar underneath): show those, never stale boxes that Save would write back.
+  const dataKey = useMemo(() => stopDataKey(stop), [stop]);
+  const [loadedKey, setLoadedKey] = useState(dataKey);
+  if (loadedKey !== dataKey) {
+    setLoadedKey(dataKey);
+    setDays(buildInitialDays(stop));
+  }
+  const overfull = useMemo(() => overfullDays(stop.nights), [stop.nights]);
+  const blockedReason = useMemo(() => {
+    const first = [...overfull.keys()].sort()[0];
+    if (!first) return null;
+    const others = overfull.size - 1;
+    const also =
+      others > 0 ? ` (and ${others} more ${others === 1 ? "day" : "days"})` : "";
+    return `Save is off for this stop: ${formatRunDayLabel(first)} has ${overfull.get(first)} curtains${also}. The boxes hold two a day, so saving here would drop one.`;
+  }, [overfull]);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -151,15 +231,47 @@ export function TourTimesStopCard({ stop }: { stop: TourTimesNeedStop }) {
   }
 
   function save() {
+    // Never silently drop a curtain the two boxes cannot show.
+    if (blockedReason) {
+      setError(blockedReason);
+      return;
+    }
     const { stamps, error: checkError } = collectStamps(days);
     if (checkError) {
       setError(checkError);
       return;
     }
+
+    // Saving replaces every curtain at this stop, so anything stored that is not
+    // in the boxes now is deleted. A changed time removes the old one. Ask first.
+    const keeping = new Set(stamps.map(stampKey));
+    const stored = new Map(stop.nights.map((night) => [stampKey(night), night]));
+    const removed = [...stored.keys()]
+      .filter((key) => !keeping.has(key))
+      .sort()
+      .map((key) => stored.get(key)!);
+    if (removed.length > 0) {
+      const listed = removed.slice(0, CONFIRM_LIST_MAX).map(stampLabel).join(", ");
+      const more =
+        removed.length > CONFIRM_LIST_MAX
+          ? `, and ${removed.length - CONFIRM_LIST_MAX} more`
+          : "";
+      const noun = removed.length === 1 ? "curtain" : "curtains";
+      const question = `This will remove ${removed.length} ${noun}: ${listed}${more}. Save anyway?`;
+      if (!window.confirm(question)) return;
+    }
+    const changedDates = [
+      ...removed,
+      ...stamps.filter((stamp) => !stored.has(stampKey(stamp))),
+    ]
+      .map((stamp) => stamp.date)
+      .sort();
+
     setError(null);
     startTransition(async () => {
       const result = await saveTourStopTimesAction({
         runId: stop.runId,
+        productionId: stop.productionId,
         datesTimes: stamps,
       });
       if (!result.ok) {
@@ -167,7 +279,22 @@ export function TourTimesStopCard({ stop }: { stop: TourTimesNeedStop }) {
         return;
       }
       setSaved(true);
-      router.refresh();
+      if (!calendarMonth) {
+        router.refresh();
+        return;
+      }
+      // Show page: keep this stop selected and the calendar on a month where the
+      // change is visible. Also drops any old ?ok= banner from the address.
+      const inView =
+        changedDates.length === 0 ||
+        changedDates.some((date) => date.startsWith(calendarMonth));
+      const month = inView ? calendarMonth : changedDates[0].slice(0, 7);
+      const href = `/admin/shows/${stop.productionId}?month=${month}&venue=${encodeURIComponent(stop.runId)}`;
+      if (`${window.location.pathname}${window.location.search}` === href) {
+        router.refresh();
+      } else {
+        router.replace(href, { scroll: false });
+      }
     });
   }
 
@@ -184,7 +311,7 @@ export function TourTimesStopCard({ stop }: { stop: TourTimesNeedStop }) {
             {venueLine ? " · " : ""}
             {formatStopDateRange(stop.startDate, stop.endDate)}
           </p>
-          <p className="admin-reason">{stop.reason}</p>
+          {stop.reason ? <p className="admin-reason">{stop.reason}</p> : null}
           {zoneLabel ? (
             <p className="admin-tour-times-zone">{zoneLabel}</p>
           ) : null}
@@ -201,50 +328,72 @@ export function TourTimesStopCard({ stop }: { stop: TourTimesNeedStop }) {
         ) : null}
       </header>
 
+      <div className="admin-tour-times-day head" aria-hidden="true">
+        <span />
+        <span className="admin-tour-times-compare-label">Matinee</span>
+        <span className="admin-tour-times-compare-label">Evening</span>
+        <span />
+      </div>
+
       <ul ref={listRef} className="admin-tour-times-days">
-        {days.map((day, index) => (
-          <li key={day.date} className="admin-tour-times-day">
-            <span className="admin-tour-times-day-label">{formatRunDayLabel(day.date)}</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              placeholder={hint1}
-              aria-label={`${formatRunDayLabel(day.date)} first time`}
-              data-time-col="1"
-              className="admin-tour-times-time"
-              value={day.time1}
-              disabled={day.noShow || pending}
-              onChange={(event) => changeTime(day.date, 1, event.target.value)}
-              onKeyDown={(event) => onTimeKeyDown(event, index, 1)}
-            />
-            <input
-              type="text"
-              inputMode="numeric"
-              placeholder={hint2}
-              aria-label={`${formatRunDayLabel(day.date)} second time`}
-              data-time-col="2"
-              className="admin-tour-times-time"
-              value={day.time2}
-              disabled={day.noShow || pending}
-              onChange={(event) => changeTime(day.date, 2, event.target.value)}
-              onKeyDown={(event) => onTimeKeyDown(event, index, 2)}
-            />
-            <label className="admin-tour-times-noshow">
-              <input
-                type="checkbox"
-                checked={day.noShow}
-                disabled={pending}
-                onChange={(event) =>
-                  updateDay(day.date, {
-                    noShow: event.target.checked,
-                    ...(event.target.checked ? { time1: "", time2: "" } : {}),
-                  })
-                }
-              />
-              No show
-            </label>
-          </li>
-        ))}
+        {days.map((day, index) => {
+          const tooMany = overfull.get(day.date);
+          const note = tooMany
+            ? `${tooMany} curtains on this day — can't edit here`
+            : day.noShow
+              ? null
+              : sameSlotNote(day.time1, day.time2);
+          return (
+            <li key={day.date}>
+              <div className="admin-tour-times-day">
+                <span className="admin-tour-times-day-label">{formatRunDayLabel(day.date)}</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder={hint1}
+                  aria-label={`${formatRunDayLabel(day.date)} matinee`}
+                  data-time-col="1"
+                  className="admin-tour-times-time"
+                  value={day.time1}
+                  disabled={day.noShow || pending || Boolean(tooMany)}
+                  onChange={(event) => changeTime(day.date, 1, event.target.value)}
+                  onKeyDown={(event) => onTimeKeyDown(event, index, 1)}
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder={hint2}
+                  aria-label={`${formatRunDayLabel(day.date)} evening`}
+                  data-time-col="2"
+                  className="admin-tour-times-time"
+                  value={day.time2}
+                  disabled={day.noShow || pending || Boolean(tooMany)}
+                  onChange={(event) => changeTime(day.date, 2, event.target.value)}
+                  onKeyDown={(event) => onTimeKeyDown(event, index, 2)}
+                />
+                <label className="admin-tour-times-noshow">
+                  <input
+                    type="checkbox"
+                    checked={day.noShow}
+                    disabled={pending || Boolean(tooMany)}
+                    onChange={(event) =>
+                      updateDay(day.date, {
+                        noShow: event.target.checked,
+                        ...(event.target.checked ? { time1: "", time2: "" } : {}),
+                      })
+                    }
+                  />
+                  No show
+                </label>
+              </div>
+              {note ? (
+                <p className="admin-muted" style={{ margin: "2px 0 0", fontSize: 12 }}>
+                  {note}
+                </p>
+              ) : null}
+            </li>
+          );
+        })}
       </ul>
 
       <p className="admin-tour-times-preview" aria-live="polite">
@@ -267,7 +416,7 @@ export function TourTimesStopCard({ stop }: { stop: TourTimesNeedStop }) {
           type="button"
           className="admin-tour-times-pill solid"
           onClick={save}
-          disabled={pending}
+          disabled={pending || Boolean(blockedReason)}
         >
           {pending ? "Saving…" : "Save"}
         </button>
@@ -279,6 +428,10 @@ export function TourTimesStopCard({ stop }: { stop: TourTimesNeedStop }) {
         >
           Cancel
         </button>
+        <p className="admin-tour-times-save-note">
+          {blockedReason ??
+            "Saving replaces all times for this stop. Empty boxes and No show remove curtains."}
+        </p>
       </div>
     </article>
   );

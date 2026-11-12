@@ -14,8 +14,8 @@ function listingKindLabel(kind: string): string {
   return kind;
 }
 
-function nightCount(count: number): string {
-  return count === 1 ? "1 night" : `${count} nights`;
+function curtainCount(count: number): string {
+  return count === 1 ? "1 curtain" : `${count} curtains`;
 }
 
 export function CatalogReviewQueue({
@@ -79,9 +79,9 @@ export function CatalogReviewQueue({
               <th>Kind</th>
               <th>Venue</th>
               <th>Genres</th>
-              <th>First night</th>
-              <th>Last night</th>
-              <th>Future nights</th>
+              <th>First curtain</th>
+              <th>Last curtain</th>
+              <th>Future curtains</th>
               <th>Source</th>
               <th>Review</th>
             </tr>
@@ -105,7 +105,7 @@ export function CatalogReviewQueue({
                   <td>{row.genres}</td>
                   <td>{formatAdminDate(row.run_start_date)}</td>
                   <td>{formatAdminDate(row.run_end_date)}</td>
-                  <td>{nightCount(row.future_night_count)}</td>
+                  <td>{curtainCount(row.future_night_count)}</td>
                   <td>
                     {row.source_url ? (
                       <a href={row.source_url} target="_blank" rel="noreferrer">
@@ -127,7 +127,7 @@ export function CatalogReviewQueue({
                         maxLength={500}
                       />
                       <button
-                        className={styles.yes}
+                        className="admin-compact"
                         type="submit"
                         name="status"
                         value="approved"
@@ -135,7 +135,7 @@ export function CatalogReviewQueue({
                         Yes
                       </button>
                       <button
-                        className={styles.no}
+                        className="admin-tiny admin-danger"
                         type="submit"
                         name="status"
                         value="rejected"
@@ -178,7 +178,7 @@ export function CatalogReviewQueue({
                       <form action={setCatalogReviewAction}>
                         <input type="hidden" name="productionId" value={row.id} />
                         <input type="hidden" name="status" value="approved" />
-                        <button className={styles.undo} type="submit">
+                        <button className="admin-tiny" type="submit">
                           Undo
                         </button>
                       </form>

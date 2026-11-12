@@ -316,7 +316,7 @@ export async function CatalogShowsList({
       )}
       {filter === "archived" ? (
         <p className="admin-footnote">
-          Shows with no nights on or after today, or archived by an admin.
+          Shows with no curtains on or after today, or archived by an admin.
           Date-archived shows return to the main list automatically when a
           scrape adds future dates. Admin-archived shows need Unarchive.
         </p>

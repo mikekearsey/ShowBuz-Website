@@ -1,0 +1,2090 @@
+/*
+  ShowBuz Admin — "House Switch" look.
+
+  Same rules as Chair (dep-booking/apps/web) and Fixer (dep-booking/apps/web-master):
+  colour tokens, bee + stave wordmark, DM Sans / Fraunces / IBM Plex Mono,
+  5 / 8 / 13 / 21 / 34 / 55 spacing, and long slim pills.
+
+  Loaded by src/app/admin/layout.tsx only. Every rule is scoped to .admin-app,
+  so the public pages are not affected.
+
+  Contents
+    1. Tokens          5. Tabs + filter chips     9. Stops, venues, needs a look
+    2. Base + brand    6. Tables + status        10. Tour times
+    3. Sign-in stage   7. Pop-ups                11. Two-step
+    4. Pills           8. Show page + calendar
+
+  Motion: src/app/globals.css already switches every transition and animation
+  off under prefers-reduced-motion, and that rule covers Admin too.
+*/
+
+/* ---------------------------------------------------------------- 1. Tokens */
+
+/*
+  One table, both looks: light-dark(House lights, Stage).
+  Values are WEB-DESIGN-R1-TOKENS-2026-10-23.md (Variant C) — keep in step with
+  apps/web/src/app/globals.css. This repo cannot import from dep-booking, so the
+  values are copied here once and nowhere else.
+
+  The look follows the computer's light / dark setting. body is included so the
+  page behind Admin (overscroll, short pages) is paper or stage too.
+*/
+:where(.admin-app, body:has(.admin-app)) {
+  color-scheme: light dark;
+
+  /* Surfaces */
+  --background: light-dark(#f7f2ea, #0c0824);
+  --surface: light-dark(#fcfaf6, #16103a);
+  --raised: light-dark(#ffffff, #1e1648);
+  --border: light-dark(#e0d5c4, #3a2a6a);
+  --foreground: light-dark(#1a1428, #f5f0ff);
+  --text-secondary: light-dark(#433a52, #c9bfe8);
+  --text-muted: light-dark(#5e5670, #a89bcf);
+
+  /* Brand (chrome only — never links or status) */
+  --brand-indigo: light-dark(#3a1f8a, #9b8af0);
+  --signature-orange: #f88800;
+  --signature-orange-text: light-dark(#a84a00, #ffb84d);
+
+  /* Action steel — pill fill stays #33578F; links use --action-text */
+  --action: #33578f;
+  --action-text: light-dark(#33578f, #7ba3d4);
+  --action-hover: light-dark(#182d50, #4a6fa0);
+  /* Thin lighter edge so steel pills do not sink into the stage */
+  --action-edge: light-dark(transparent, color-mix(in srgb, #7ba3d4 40%, transparent));
+
+  /* Meaning: cyan waiting · amber hold · green booked / ok · red problem */
+  --danger: light-dark(#b71c1c, #ff8a85);
+  --danger-phone: light-dark(#c62828, #ff8a85);
+  --success: light-dark(#14532d, #7dd3a0);
+  --warning: light-dark(#8a5a00, #f0c14d);
+  --waiting: light-dark(#0e7490, #5ec8e0);
+  --focus-ring: light-dark(
+    color-mix(in srgb, #3a1f8a 40%, transparent),
+    color-mix(in srgb, #c4b5fd 50%, transparent)
+  );
+
+  /* Outline pill — the greys PillButton uses (neutral-300 / 700 / 100) */
+  --outline-line: light-dark(#d4d4d4, #4a3a80);
+  --outline-ink: light-dark(#404040, #e5e5e5);
+  --outline-wash: light-dark(#f5f5f5, #16103a);
+
+  /* Built from the tokens above */
+  --field-line: color-mix(in srgb, var(--foreground) 45%, var(--raised));
+  --hairline: color-mix(in srgb, var(--border) 60%, transparent);
+  --row-wash: color-mix(in srgb, var(--action-text) 8%, transparent);
+  --ok-wash: color-mix(in srgb, var(--success) 12%, var(--raised));
+  --problem-wash: color-mix(in srgb, var(--danger) 12%, var(--raised));
+  --hold-wash: color-mix(in srgb, var(--warning) 16%, var(--raised));
+  --steel-wash: color-mix(in srgb, var(--action-text) 16%, var(--raised));
+  --scrim: rgb(12 8 36 / 0.55);
+
+  /* Stave */
+  --stave-line: light-dark(#c8b8a0, #433a5c);
+  --logo-buz: light-dark(#3a1f8a, #ffffff);
+  --logo-stave: light-dark(#c8b8a0, color-mix(in srgb, #e8e0ff 68%, transparent));
+
+  /* Golden-ratio spacing — apps/ios-v3/Shared/ShowBuzLayout.swift */
+  --space-1: 5px;
+  --space-2: 8px;
+  --space-3: 13px;
+  --space-4: 21px;
+  --space-5: 34px;
+  --space-6: 55px;
+  --radius-card: 13px;
+  --radius-field: 8px;
+}
+
+/* Sign-in and the code page are always the Stage, whatever the computer is set to. */
+:where(.admin-app:has(.admin-login), body:has(.admin-login)) {
+  color-scheme: dark;
+}
+
+.admin-app {
+  /* The font variables are set on this element by next/font (admin/layout.tsx). */
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+
+  /* Soft indigo wash behind page titles (PageTitle in Chair / Fixer) */
+  --spotlight-wash: radial-gradient(
+    ellipse 70% 40% at 0% 0%,
+    color-mix(in srgb, #3a1f8a 10%, transparent),
+    transparent 50%
+  );
+}
+
+@media (prefers-color-scheme: dark) {
+  .admin-app {
+    --spotlight-wash: radial-gradient(ellipse at 50% 0%, #40189855, transparent 55%);
+  }
+}
+
+/* ---------------------------------------------------------- 2. Base + brand */
+
+.admin-app {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
+/*
+  Soft spotlight behind the brand and page title (PageTitle in Chair / Fixer).
+  It starts at the very top of the page, so it has no visible edge.
+*/
+.admin-app::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 233px;
+  z-index: -1;
+  background-image: var(--spotlight-wash);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.admin-shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-4) var(--space-6);
+}
+
+.admin-app :where(a) {
+  color: var(--action-text);
+  text-underline-offset: 2px;
+}
+
+.admin-app :where(a):hover {
+  text-decoration: underline;
+}
+
+.admin-app :where(a, button, input, select):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Brand: bee (no stave) beside the stave wordmark. Stacked version is for sign-in. */
+.admin-brand {
+  display: flex;
+  align-items: center;
+  margin: 0 0 var(--space-4);
+}
+
+.admin-brand-inline,
+.admin-brand-stacked {
+  display: block;
+  line-height: 0;
+}
+
+.admin-brand-stacked {
+  display: none;
+}
+
+.showbuz-logo {
+  display: inline-flex;
+  position: relative;
+  max-width: 100%;
+  line-height: 0;
+}
+
+.showbuz-logo__stave {
+  color: var(--logo-stave);
+}
+
+.showbuz-logo__buz {
+  fill: var(--logo-buz);
+}
+
+.showbuz-logo__word {
+  font-family: var(--font-great-vibes), cursive;
+  font-weight: 400;
+}
+
+.showbuz-logo__word--hero {
+  font-size: 92px;
+}
+
+.showbuz-logo__word--inline {
+  font-size: 34px;
+}
+
+.showbuz-logo__bee {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.showbuz-logo--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* Menu size: bee 37 beside a 144px-wide wordmark */
+.showbuz-logo__bee-wrap--inline {
+  display: block;
+  width: 37px;
+  flex-shrink: 0;
+}
+
+.showbuz-logo--inline .showbuz-logo__svg {
+  flex: 1;
+  min-width: 0;
+}
+
+.showbuz-logo--stacked {
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.showbuz-logo__bee-wrap--stacked {
+  display: block;
+  width: calc(100% * 0.327);
+}
+
+/* Page header: title on the left, Two-step / Sign out on the right */
+.admin-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.admin-top > :first-child {
+  flex: 1 1 21rem;
+  min-width: 0;
+}
+
+.admin-kicker {
+  margin: 0 0 var(--space-1);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--signature-orange-text);
+}
+
+.admin-kicker a {
+  color: inherit;
+}
+
+/* Page title — Fraunces, as PageTitle in Chair / Fixer */
+.admin-app h1 {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+/* Five-line stave under the page title — the one stave on each page */
+.admin-top h1::after {
+  content: "";
+  display: block;
+  width: min(100%, 13rem);
+  height: 17px;
+  margin-top: var(--space-2);
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--stave-line) 0 1px,
+    transparent 1px 4px
+  );
+  opacity: 0.85;
+}
+
+.admin-app h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.admin-lead {
+  margin: 0;
+  max-width: 46em;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.admin-footnote {
+  margin: var(--space-3) 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.admin-footnote:not(:last-child) {
+  margin-bottom: var(--space-3);
+}
+
+.admin-muted {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Forms */
+.admin-form {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.admin-form.row {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  align-items: end;
+}
+
+.admin-form label.wide {
+  grid-column: 1 / -1;
+}
+
+.admin-form label {
+  display: grid;
+  gap: var(--space-1);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.admin-form input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--space-5);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--field-line);
+  border-radius: var(--radius-field);
+  background: var(--raised);
+  color: var(--foreground);
+  font: inherit;
+  font-weight: 400;
+}
+
+.admin-password-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.admin-password-wrap input {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 44px;
+}
+
+.admin-password-toggle {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.admin-password-toggle:hover,
+.admin-password-toggle:focus-visible {
+  color: var(--foreground);
+}
+
+.admin-password-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+/* Messages: green = done, red = problem */
+.admin-banner {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-field);
+  background: var(--surface);
+  font-size: 14px;
+}
+
+.admin-banner p {
+  margin: 0;
+}
+
+.admin-banner.ok {
+  border-color: color-mix(in srgb, var(--success) 30%, transparent);
+  background: var(--ok-wash);
+}
+
+.admin-banner.error {
+  border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+  background: var(--problem-wash);
+}
+
+/* ------------------------------------------------------- 3. Sign-in stage */
+
+/*
+  AuthStage in Chair / Fixer: dark indigo stage lit from above, stacked logo,
+  form on a card. Sign-in and the code page both render <main class="admin-login">,
+  so the stage is switched on from here and those files are not edited.
+*/
+.admin-app:has(.admin-login) {
+  overflow: hidden;
+}
+
+.admin-app:has(.admin-login)::before {
+  inset: 0;
+  height: auto;
+  opacity: 1;
+  background:
+    radial-gradient(
+      ellipse 95% 72% at 50% 0%,
+      #4a1fa6 0%,
+      #3a178f 22%,
+      #2a1470 42%,
+      transparent 68%
+    ),
+    radial-gradient(ellipse 120% 100% at 50% 110%, #0c0824 0%, transparent 55%),
+    radial-gradient(ellipse 80% 70% at 0% 100%, #0c0824 0%, transparent 50%),
+    radial-gradient(ellipse 80% 70% at 100% 100%, #0c0824 0%, transparent 50%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .admin-app:has(.admin-login)::before {
+    animation: admin-stage-breathe 10s ease-in-out infinite;
+  }
+}
+
+@keyframes admin-stage-breathe {
+  0%,
+  100% {
+    opacity: 0.92;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Golden optical centre: space above : space below = 1 : φ */
+.admin-app:has(.admin-login) .admin-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: none;
+  min-height: 100dvh;
+  padding: var(--space-5) var(--space-4);
+}
+
+.admin-app:has(.admin-login) .admin-shell::before {
+  content: "";
+  flex: 1;
+}
+
+.admin-app:has(.admin-login) .admin-shell::after {
+  content: "";
+  flex: 1.618;
+}
+
+.admin-app:has(.admin-login) .admin-brand {
+  display: block;
+  width: min(86vw, 440px);
+  margin: 0 0 var(--space-5);
+}
+
+.admin-app:has(.admin-login) .admin-brand-inline {
+  display: none;
+}
+
+.admin-app:has(.admin-login) .admin-brand-stacked {
+  display: block;
+}
+
+.admin-login {
+  width: 100%;
+  max-width: 28rem;
+  padding: var(--space-4);
+  border: 1px solid color-mix(in srgb, #9b8af0 28%, transparent);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, #16103a 92%, transparent);
+  box-shadow: 0 8px 32px rgb(0 0 0 / 0.35);
+}
+
+/* The logo above the card already says ShowBuz. */
+.admin-login .admin-kicker {
+  display: none;
+}
+
+.admin-login .admin-banner {
+  margin: var(--space-3) 0 0;
+}
+
+/* "Try again" + "Sign out" pair on the code page */
+.admin-login div.admin-form {
+  justify-content: center;
+}
+
+.admin-login .admin-footnote {
+  margin-top: var(--space-4);
+}
+
+/* ---------------------------------------------------------------- 4. Pills */
+
+/*
+  One pill for every button — PillButton in Chair / Fixer.
+  Long and slim: the side padding is about four times the top padding (filter
+  chips are tighter), and each size has a minimum width, so short words
+  ("Edit", "Keep", "Yes") never make a stubby pill and pills that sit together
+  come out the same size.
+
+    md  25px tall, 144px min   default
+    sm  21px tall, 110px min   inside tables and cards (110 = 34 × φ × 2)
+    lg  39px tall, 233px min   Sign in / Verify
+
+  Tones: primary (steel fill) · secondary (outline) · danger (outline, red words).
+  A plain <button> with no class is a primary pill.
+*/
+.admin-app
+  :where(
+    button:not([class]),
+    .admin-ghost,
+    .admin-tiny,
+    .admin-compact,
+    .admin-tour-times-pill,
+    .admin-archive-pill,
+    .admin-filter
+  ) {
+  --pill-bg: var(--action);
+  --pill-bg-hover: var(--action-hover);
+  --pill-fg: #fff;
+  --pill-edge: var(--action-edge);
+  --pill-weight: 600;
+  --pill-font: 14px;
+  --pill-lh: 13px;
+  --pill-pad-y: var(--space-1);
+  --pill-pad-x: var(--space-4);
+  --pill-min: 144px;
+  --pill-hit: var(--space-2);
+
+  appearance: none;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  box-sizing: border-box;
+  min-width: var(--pill-min);
+  /* In a grid, a pill keeps its own width instead of stretching. */
+  justify-self: start;
+  margin: 0;
+  padding: var(--pill-pad-y) var(--pill-pad-x);
+  border: 1px solid var(--pill-edge);
+  border-radius: 999px;
+  background: var(--pill-bg);
+  color: var(--pill-fg);
+  font: inherit;
+  font-size: var(--pill-font);
+  font-weight: var(--pill-weight);
+  line-height: var(--pill-lh);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+
+  /* Slim to look at, easier to hit: the click area reaches past the pill. */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: calc(var(--pill-hit) * -1) 0;
+  }
+
+  &:hover {
+    background: var(--pill-bg-hover);
+    text-decoration: none;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &:disabled:hover {
+    background: var(--pill-bg);
+  }
+}
+
+/* Secondary — outline */
+.admin-app
+  :where(
+    .admin-ghost,
+    .admin-tiny,
+    .admin-tour-times-pill,
+    .admin-archive-pill,
+    .admin-filter
+  ) {
+  --pill-bg: transparent;
+  --pill-bg-hover: var(--outline-wash);
+  --pill-fg: var(--outline-ink);
+  --pill-edge: var(--outline-line);
+  --pill-weight: 500;
+}
+
+/* Filled again: Save on a tour-times card, the chosen filter chip */
+.admin-app :where(.admin-tour-times-pill.solid, .admin-filter.active) {
+  --pill-bg: var(--action);
+  --pill-bg-hover: var(--action-hover);
+  --pill-fg: #fff;
+  --pill-edge: var(--action-edge);
+  --pill-weight: 600;
+}
+
+/* Danger — outline, red words. Add to a secondary pill: "admin-tiny admin-danger". */
+.admin-app :where(.admin-danger) {
+  --pill-fg: var(--danger-phone);
+}
+
+/* sm */
+.admin-app
+  :where(.admin-tiny, .admin-compact, .admin-archive-pill, .admin-filter) {
+  --pill-font: 12px;
+  --pill-pad-y: 3px;
+  --pill-pad-x: var(--space-3);
+  --pill-min: 110px;
+  --pill-hit: 4px;
+}
+
+/* lg */
+.admin-login .admin-form > button[type="submit"] {
+  --pill-font: 16px;
+  --pill-lh: 21px;
+  --pill-pad-y: var(--space-2);
+  --pill-pad-x: var(--space-5);
+  --pill-min: 233px;
+  --pill-hit: 3px;
+  justify-self: center;
+}
+
+/*
+  Cancel = red words, no outline (Chair / Fixer rule).
+  The last selector is Cancel on the two-step set-up form: it is the only
+  type="button" inside that form. It is matched here so the two-step file does
+  not have to be edited.
+*/
+.admin-app
+  :where(.admin-cancel, .admin-tour-times-cancel, .admin-curtain-cancel),
+.admin-two-step-panel form .admin-two-step-actions button[type="button"] {
+  appearance: none;
+  min-width: 0;
+  margin: 0;
+  padding: 3px var(--space-1);
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--danger-phone);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.admin-app
+  :where(.admin-cancel, .admin-tour-times-cancel, .admin-curtain-cancel):hover,
+.admin-two-step-panel
+  form
+  .admin-two-step-actions
+  button[type="button"]:hover {
+  background: transparent;
+  text-decoration: underline;
+}
+
+.admin-app
+  :where(.admin-cancel, .admin-tour-times-cancel, .admin-curtain-cancel):disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Pills that sit together share one width (the widest label). */
+.admin-top-actions,
+.admin-toolbar-actions {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.admin-top-actions > form,
+.admin-toolbar-actions > form {
+  display: grid;
+}
+
+.admin-top-actions > a,
+.admin-top-actions > form > button,
+.admin-toolbar-actions > button,
+.admin-toolbar-actions > form > button {
+  width: 100%;
+}
+
+/* Only as wide as its pills, not the whole toolbar. */
+.admin-toolbar-actions {
+  justify-self: start;
+  width: fit-content;
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .admin-top-actions,
+  .admin-toolbar-actions {
+    grid-auto-flow: row;
+  }
+}
+
+.admin-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ------------------------------------------------ 5. Tabs + filter chips */
+
+.admin-list-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+
+/*
+  One long segmented pill, equal segments, steel on the chosen one —
+  the same control as the House lights | Stage switch in Chair / Fixer.
+*/
+.admin-kind-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(123px, 1fr));
+  gap: 3px;
+  margin: 0;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--space-4);
+  background: var(--raised);
+}
+
+/* The main menu takes the whole row and wraps on a phone. */
+.admin-list-nav > .admin-kind-tabs:first-child {
+  flex: 1 1 100%;
+  grid-template-columns: repeat(auto-fit, minmax(123px, 1fr));
+}
+
+.admin-kind-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 21px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 120ms ease;
+}
+
+.admin-kind-tab:hover {
+  background: var(--outline-wash);
+  text-decoration: none;
+}
+
+.admin-kind-tab-count {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.admin-kind-tab.active {
+  border-color: var(--action-edge);
+  background: var(--action);
+  color: #fff;
+  font-weight: 600;
+}
+
+.admin-kind-tab.active .admin-kind-tab-count {
+  color: color-mix(in srgb, #fff 80%, transparent);
+}
+
+.admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+}
+
+/* Filter chips are sm pills (see 4). Narrower padding so every chip fits 110px. */
+.admin-filter {
+  --pill-pad-x: var(--space-2);
+}
+
+.admin-filter span {
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+/* ---------------------------------------------------- 6. Tables + status */
+
+.admin-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--raised);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--hairline);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-table tbody tr:hover {
+  background: var(--row-wash);
+}
+
+.admin-table th {
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-table a {
+  font-weight: 600;
+}
+
+.admin-table.compact th,
+.admin-table.compact td,
+.admin-table.top td {
+  vertical-align: top;
+}
+
+.admin-table td.wrap,
+.admin-table th.wrap {
+  white-space: normal;
+}
+
+/* Status words — colour is the meaning */
+.admin-status {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.admin-status.ok {
+  color: var(--success);
+}
+
+.admin-status.error {
+  color: var(--danger);
+}
+
+.admin-status.empty,
+.admin-status.pending,
+.admin-status.ignored {
+  color: var(--warning);
+}
+
+.admin-status-error {
+  display: block;
+  max-width: 22em;
+  margin-top: var(--space-1);
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  text-transform: none;
+  white-space: normal;
+}
+
+/* Status word + "Details" under it — opens the scrape pop-up */
+.admin-scrape-trigger {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-scrape-hint {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.admin-scrape-trigger:hover .admin-scrape-hint,
+.admin-scrape-trigger:focus-visible .admin-scrape-hint {
+  color: var(--action-text);
+}
+
+/* Small notes under a table cell or card line */
+.admin-source-label,
+.admin-recheck,
+.admin-field-error,
+.admin-reason {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.admin-source-label,
+.admin-reason {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.admin-recheck {
+  color: var(--warning);
+}
+
+.admin-field-error {
+  color: var(--danger);
+}
+
+.admin-inline-input {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--field-line);
+  border-radius: var(--radius-field);
+  background: var(--raised);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 13px;
+}
+
+/* ---------------------------------------------------------------- 7. Pop-ups */
+
+.admin-sheet-backdrop,
+.admin-choice-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: var(--space-4);
+  background: var(--scrim);
+}
+
+.admin-choice-backdrop {
+  z-index: 50;
+  align-items: center;
+}
+
+@media (min-width: 720px) {
+  .admin-sheet-backdrop {
+    align-items: center;
+  }
+}
+
+/* Detail sheets (scrape status, refresh progress) */
+.admin-sheet {
+  width: min(520px, 100%);
+  max-height: min(85dvh, 720px);
+  overflow: auto;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--raised);
+  box-shadow: 0 8px 32px rgb(0 0 0 / 0.25);
+  white-space: normal;
+}
+
+.admin-scrape-sheet {
+  width: min(560px, 100%);
+}
+
+.admin-sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.admin-sheet-meta {
+  display: grid;
+  grid-template-columns: 9em 1fr;
+  gap: var(--space-2) var(--space-3);
+  margin: var(--space-3) 0;
+  font-size: 14px;
+}
+
+.admin-sheet-meta dt {
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.admin-sheet-meta dd {
+  margin: 0;
+  white-space: normal;
+}
+
+.admin-scrape-steps {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-scrape-step {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-field);
+  background: var(--surface);
+}
+
+.admin-scrape-step strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-scrape-step span {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.admin-scrape-step.current {
+  border-color: var(--action-text);
+  background: var(--raised);
+}
+
+.admin-scrape-step.done {
+  border-color: color-mix(in srgb, var(--success) 30%, transparent);
+  background: var(--ok-wash);
+}
+
+.admin-scrape-step.done strong::before {
+  content: "✓ ";
+  color: var(--success);
+}
+
+.admin-scrape-step.current strong::before {
+  content: "→ ";
+  color: var(--action-text);
+}
+
+/*
+  Choice card — the web version of PillChoiceCard in the iPhone app
+  (apps/ios-v3/DepBook/Views/DesignSystem.swift): a title, short centred words,
+  and a slim outline that slides to the row you are on. Cancel is red words.
+  Same measures as the app: card 340 wide, rows 44 tall, outline 178 × 34.
+*/
+.admin-choice-card {
+  width: min(340px, 100%);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--space-4);
+  background: var(--raised);
+  box-shadow: 0 8px 32px rgb(0 0 0 / 0.25);
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 400;
+  text-align: center;
+  white-space: normal;
+}
+
+.admin-app .admin-choice-card h2 {
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.admin-choice-caption {
+  margin: var(--space-2) 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.admin-choice-rows {
+  --choice-row: 44px;
+  --choice-at: 0;
+  position: relative;
+  display: grid;
+  grid-auto-rows: var(--choice-row);
+  margin-top: var(--space-3);
+}
+
+.admin-choice-outline {
+  position: absolute;
+  top: calc((var(--choice-row) - var(--space-5)) / 2);
+  left: 50%;
+  box-sizing: border-box;
+  width: min(178px, 100%);
+  height: var(--space-5);
+  border: 1.5px solid var(--waiting);
+  border-radius: 999px;
+  pointer-events: none;
+  transform: translate(-50%, calc(var(--choice-at) * var(--choice-row)));
+  transition: transform 260ms cubic-bezier(0.3, 1.25, 0.5, 1);
+}
+
+.admin-choice-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* The outline is the focus mark here. */
+.admin-app .admin-choice-row:focus-visible {
+  outline: none;
+}
+
+.admin-choice-row.on {
+  color: var(--waiting);
+}
+
+.admin-choice-row.cancel {
+  color: var(--danger-phone);
+}
+
+/* ------------------------------------------------ 8. Show page + calendar */
+
+.admin-toolbar {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--raised);
+}
+
+.admin-toolbar p,
+.admin-add p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.admin-toolbar.compact {
+  margin-bottom: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+
+/* Direct children only, so the words inside the Refresh pop-up are not hidden. */
+.admin-toolbar.compact > p {
+  display: none;
+}
+
+.admin-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-2);
+}
+
+.admin-month-nav a {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-month-nav + .admin-footnote {
+  margin-top: 0;
+}
+
+.admin-cal {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  /* The Mon–Sun row is only as tall as its words. */
+  grid-template-rows: auto;
+  gap: 1px;
+  margin: var(--space-3) 0 var(--space-5);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--border);
+}
+
+.admin-cal-head,
+.admin-cal-day {
+  min-height: 110px;
+  padding: var(--space-2);
+  background: var(--raised);
+}
+
+.admin-cal-head {
+  min-height: 0;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-cal-day.empty {
+  background: var(--surface);
+}
+
+.admin-cal-num {
+  display: block;
+  flex: 0 0 auto;
+  margin-bottom: var(--space-1);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* A confirmed month is ringed green (booked / ok). */
+.admin-cal.confirmed {
+  outline: 2px solid var(--success);
+  outline-offset: 2px;
+}
+
+/* One-screen month: shrink day cells to the viewport, no vertical page scroll. */
+.admin-cal.fit-page {
+  height: auto;
+  margin-bottom: var(--space-3);
+  grid-auto-rows: minmax(4.5rem, auto);
+}
+
+.admin-cal.fit-page .admin-cal-head,
+.admin-cal.fit-page .admin-cal-day {
+  min-height: 4.5rem;
+  padding: var(--space-1);
+  overflow: visible;
+}
+
+.admin-cal.fit-page .admin-cal-head {
+  min-height: 0;
+}
+
+.admin-cal.fit-page .admin-cal-day {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-cal.fit-page .admin-cal-curtains {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  overflow: visible;
+}
+
+.admin-cal.fit-page .admin-curtain {
+  flex: 0 0 auto;
+  margin-bottom: 0;
+  padding: 2px var(--space-1);
+  font-size: 11px;
+}
+
+.admin-cal-day-venue {
+  display: block;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.admin-cal.fit-page .admin-cal-day-venue {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  margin-top: auto;
+  padding-top: 2px;
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* A curtain in a day cell. Steel wash = locked by Admin. */
+.admin-curtain {
+  display: grid;
+  gap: 1px;
+  margin-bottom: var(--space-1);
+  padding: 3px var(--space-1);
+  border-radius: var(--space-1);
+  background: var(--background);
+  font-size: 12px;
+}
+
+.admin-curtain.locked {
+  background: var(--steel-wash);
+}
+
+.admin-curtain-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px;
+  min-width: 0;
+}
+
+.admin-curtain-time {
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.admin-curtain-x {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
+  height: 1em;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-curtain-x svg {
+  display: block;
+  width: 1em;
+  height: 1em;
+}
+
+.admin-curtain-x::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+}
+
+.admin-curtain-x:hover,
+.admin-curtain-x:focus-visible {
+  color: var(--danger);
+}
+
+/* "Remove 19:30 on …?" inside the day cell: slim pill, then Cancel in red. */
+.admin-curtain-confirm {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  margin-top: 2px;
+}
+
+.admin-curtain-confirm-q {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: normal;
+}
+
+.admin-curtain-confirm-actions {
+  display: grid;
+  gap: 2px;
+}
+
+.admin-curtain-confirm-form {
+  display: grid;
+  margin: 0;
+}
+
+.admin-curtain-remove-pill {
+  padding: 2px var(--space-2);
+  border: 1px solid var(--action-edge);
+  border-radius: 999px;
+  background: var(--action);
+  color: #fff;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 13px;
+  cursor: pointer;
+}
+
+.admin-curtain-remove-pill:hover {
+  background: var(--action-hover);
+}
+
+.admin-app .admin-curtain-cancel {
+  padding: 1px 3px;
+  font-size: 10px;
+}
+
+/* Touring: venue list on the left, month on the right */
+.admin-tour-split {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+}
+
+.admin-tour-calendar {
+  min-width: 0;
+}
+
+.admin-itinerary {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--raised);
+}
+
+.admin-itinerary.sidebar {
+  position: sticky;
+  top: var(--space-3);
+  max-height: calc(100dvh - 180px);
+  margin: 0;
+  overflow: auto;
+}
+
+.admin-itinerary.sidebar h2 {
+  margin: 0 0 var(--space-1);
+  font-size: 15px;
+}
+
+.admin-itinerary.sidebar .admin-footnote {
+  margin: 0 0 var(--space-2);
+  font-size: 11px;
+}
+
+.admin-itinerary-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-itinerary-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--space-1);
+  color: inherit;
+  font-size: 12px;
+  line-height: 1.3;
+  text-decoration: none;
+}
+
+.admin-itinerary-row:hover {
+  background: var(--outline-wash);
+  text-decoration: none;
+}
+
+.admin-itinerary-row.active {
+  background: var(--steel-wash);
+  font-weight: 600;
+}
+
+.admin-itinerary-venue {
+  min-width: 0;
+  font-weight: 600;
+}
+
+.admin-itinerary-dates {
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .admin-tour-split {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-itinerary.sidebar {
+    position: static;
+    max-height: 240px;
+  }
+}
+
+/* "Add a curtain" and "Removed, locked against refresh" cards */
+.admin-add,
+.admin-removed {
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--raised);
+}
+
+.admin-add p {
+  margin: var(--space-1) 0 0;
+}
+
+.admin-removed ul {
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-removed li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 14px;
+}
+
+.admin-removed li:last-child {
+  border-bottom: 0;
+}
+
+/* ------------------------------------- 9. Stops, venues, needs a look */
+
+.admin-stops {
+  margin: 0 0 var(--space-4);
+}
+
+.admin-stops h2 {
+  margin-bottom: var(--space-2);
+}
+
+.admin-stops .admin-footnote {
+  margin: 0 0 var(--space-2);
+}
+
+.admin-stop-venue {
+  font-weight: 600;
+}
+
+/* Official tour page: link + Edit, or the edit box */
+.admin-official {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 12em;
+  margin-top: var(--space-3);
+  white-space: normal;
+}
+
+.admin-official-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.admin-official a {
+  word-break: break-word;
+}
+
+.admin-table .admin-official {
+  margin-top: var(--space-1);
+  white-space: nowrap;
+}
+
+.admin-table .admin-official a {
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.admin-table .admin-official-row {
+  flex-wrap: nowrap;
+}
+
+.admin-official-edit,
+.admin-paste,
+.admin-venue-facts {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.admin-official-edit label,
+.admin-paste-label {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* A pill in a grid keeps its own width instead of stretching. */
+.admin-venue-facts > button,
+.admin-table td > form > button {
+  justify-self: start;
+}
+
+.admin-table td > form + .admin-tiny,
+.admin-table td > form + .admin-paste {
+  margin-top: var(--space-2);
+}
+
+.admin-paste {
+  max-width: 28em;
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+}
+
+.admin-preview {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.admin-preview p,
+.admin-preview ul {
+  margin: 0;
+}
+
+.admin-preview ul {
+  padding-left: 1.1em;
+  list-style: disc;
+}
+
+/* Needs a look */
+.admin-look-list {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.admin-look-group {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--raised);
+}
+
+.admin-look-group h2 {
+  margin-bottom: var(--space-2);
+}
+
+.admin-look-group h2 a {
+  color: inherit;
+}
+
+.admin-look-group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-look-night {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.admin-look-night-main {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  font-size: 14px;
+}
+
+.admin-look-night .admin-reason {
+  margin-top: 0;
+}
+
+.admin-hide-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.admin-hide-confirm p {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* ------------------------------------------------------------ 10. Tour times */
+
+.admin-tour-times-section {
+  margin: 0 0 var(--space-5);
+}
+
+.admin-tour-times-section h2 {
+  margin: 0 0 var(--space-3);
+}
+
+.admin-tour-times-section > .admin-footnote {
+  margin-top: 0;
+}
+
+.admin-tour-times-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.admin-tour-times-card {
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--raised);
+}
+
+.admin-tour-times-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.admin-tour-times-card h3 {
+  margin: 0 0 var(--space-1);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.admin-tour-times-meta {
+  margin: 0 0 var(--space-1);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.admin-tour-times-card .admin-reason {
+  margin: 0;
+  font-size: 13px;
+}
+
+.admin-tour-times-zone {
+  margin: var(--space-1) 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-tour-times-days {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-tour-times-day {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 7rem) 4.5rem 4.5rem minmax(5rem, auto);
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.admin-tour-times-day-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Curtain times are set in the mono face so 14:30 and 19:30 line up. */
+.admin-tour-times-time {
+  width: 100%;
+  min-height: var(--space-5);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--field-line);
+  border-radius: var(--radius-field);
+  background: var(--raised);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Typed (confirmed) times are bold; the hint is pale. */
+.admin-tour-times-time:not(:placeholder-shown) {
+  font-weight: 500;
+}
+
+.admin-tour-times-time::placeholder {
+  color: color-mix(in srgb, var(--text-muted) 40%, transparent);
+  font-weight: 400;
+  opacity: 1;
+}
+
+.admin-tour-times-time:disabled {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.admin-tour-times-noshow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-tour-times-noshow input {
+  accent-color: var(--action);
+}
+
+.admin-tour-times-preview {
+  margin: var(--space-3) 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.admin-tour-times-card .admin-banner {
+  margin: var(--space-3) 0 0;
+}
+
+.admin-tour-times-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+/* Plain line beside Save: what saving does, or why Save is off. */
+.admin-tour-times-save-note {
+  flex: 1 1 16rem;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Show page: the stop editor (or its one-line hint) above the calendar. */
+.admin-app .admin-tour-stop-editor {
+  margin: 0 0 var(--space-3);
+}
+
+.admin-tour-times-compare {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .admin-tour-times-compare {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.admin-tour-times-compare-label {
+  margin: 0 0 var(--space-1);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-tour-times-compare p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.admin-tour-times-compare p.admin-tour-times-compare-label {
+  margin-bottom: var(--space-1);
+  font-size: 12px;
+}
+
+.admin-tour-times-footer {
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 520px) {
+  .admin-tour-times-day {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "label label"
+      "t1 t2"
+      "noshow noshow";
+  }
+
+  /* The Matinee / Evening heading row has no grid areas; the boxes' labels cover it. */
+  .admin-tour-times-day.head {
+    display: none;
+  }
+
+  .admin-tour-times-day-label {
+    grid-area: label;
+  }
+
+  .admin-tour-times-day .admin-tour-times-time:nth-of-type(1) {
+    grid-area: t1;
+  }
+
+  .admin-tour-times-day .admin-tour-times-time:nth-of-type(2) {
+    grid-area: t2;
+  }
+
+  .admin-tour-times-noshow {
+    grid-area: noshow;
+  }
+}
+
+/* -------------------------------------------------------------- 11. Two-step */
+
+.admin-two-step-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 32rem;
+  margin: var(--space-4) 0;
+}
+
+/* A pill on its own in the panel keeps its own width. */
+.admin-two-step-panel > button {
+  align-self: flex-start;
+}
+
+/* Stays white in both looks so a phone camera can read it. */
+.admin-two-step-qr {
+  display: block;
+  width: 192px;
+  height: 192px;
+  margin: 0 auto;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-field);
+  background: #fff;
+}
+
+.admin-two-step-secret {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-align: center;
+  word-break: break-all;
+}
+
+.admin-two-step-list {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--raised);
+  list-style: none;
+}
+
+.admin-two-step-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--hairline);
+}
+
+.admin-two-step-row:first-child {
+  border-top: 0;
+}
+
+.admin-two-step-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-two-step-row .admin-footnote {
+  margin: 3px 0 0;
+}
+
+.admin-two-step-panel .admin-form {
+  margin-top: 0;
+}
+
+.admin-two-step-panel .admin-banner {
+  margin: 0;
+}
+
+/* Pills that sit together share one width (the widest label). */
+.admin-two-step-actions {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.admin-two-step-actions > button {
+  width: 100%;
+}
+
+/* …except Cancel, which is red words and keeps its own width. */
+.admin-two-step-panel form .admin-two-step-actions button[type="button"] {
+  width: auto;
+  justify-self: start;
+}
+
+@media (max-width: 520px) {
+  .admin-two-step-actions {
+    grid-auto-flow: row;
+  }
+}

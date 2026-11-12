@@ -120,7 +120,7 @@ export function OfficialTourLink({
             </button>
             <button
               type="button"
-              className="admin-tiny"
+              className="admin-cancel"
               onClick={() => {
                 setDraft(shownUrl ?? "");
                 setError(null);

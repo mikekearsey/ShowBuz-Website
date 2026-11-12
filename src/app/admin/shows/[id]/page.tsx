@@ -10,6 +10,7 @@ import { CurtainRow } from "@/components/admin/CurtainRow";
 import { OfficialTourLink } from "@/components/admin/OfficialTourLink";
 import { RefreshScrapeDialog } from "@/components/admin/RefreshScrapeDialog";
 import { TourStops } from "@/components/admin/TourStops";
+import { TourTimesStopCard } from "@/components/admin/TourTimesStopCard";
 import { requireAdminAccess } from "@/lib/admin/admin-access";
 import {
   formatTouringVenueSummaryFromRuns,
@@ -19,12 +20,18 @@ import {
   listPerformances,
   listVenueRuns,
   scrapeStatusLabel,
+  tourTimesStopFromRun,
   venueRunTitle,
   venueRunsFromPerformances,
   type CatalogPerformance,
   type CatalogVenueRun,
 } from "@/lib/admin/catalog";
-import { loadTourCoverage, tourIsRechecking, type TourCoverage } from "@/lib/admin/coverage";
+import {
+  isUuid,
+  loadTourCoverage,
+  tourIsRechecking,
+  type TourCoverage,
+} from "@/lib/admin/coverage";
 import { formatStopCoverage } from "@/lib/admin/labels";
 import { formatAdminDate, formatAdminDateTime, formatLondonTime, londonYmd, londonYearMonth } from "@/lib/admin/london";
 
@@ -63,15 +70,15 @@ function calendarCells(year: number, month: number): Array<{ day: number | null;
 function notice(value: string | undefined): string | null {
   switch (value) {
     case "refresh":
-      return "Refresh requested. New published nights will be added; nights you locked stay as you set them.";
+      return "Refresh requested. New published curtains will be added; curtains you locked stay as you set them.";
     case "add":
       return "Curtain added. Further refreshes will not remove it.";
     case "delete":
-      return "Curtain removed. Further refreshes will not put this night back.";
+      return "Curtain removed. Further refreshes will not put this curtain back.";
     case "restore":
       return "Curtain restored and locked.";
     case "confirm":
-      return "This month is confirmed. Future scrapes will not change these curtains or add nights in this month.";
+      return "This month is confirmed. Future scrapes will not change these curtains or add more in this month.";
     default:
       return null;
   }
@@ -104,11 +111,16 @@ function CalendarGrid({
   byDay,
   productionId,
   monthConfirmed,
+  yearMonth,
+  venueId,
 }: {
   cells: Array<{ day: number | null; ymd: string | null }>;
   byDay: Map<string, CatalogPerformance[]>;
   productionId: string;
   monthConfirmed: boolean;
+  /** Month in view and picked stop, so Remove comes back to the same place. */
+  yearMonth: string;
+  venueId: string | null;
 }) {
   return (
     <div className={`admin-cal fit-page${monthConfirmed ? " confirmed" : ""}`}>
@@ -141,6 +153,8 @@ function CalendarGrid({
                   curtainId={curtain.id}
                   startsAt={curtain.starts_at}
                   locked={isAdminLocked(curtain)}
+                  returnMonth={yearMonth}
+                  returnVenue={venueId}
                 />
               ))}
             </div>
@@ -240,8 +254,30 @@ export default async function AdminShowPage({
   const monthConfirmed = (production.admin_locked_months ?? []).includes(yearMonth);
   const finish = production.run_end_date;
 
+  // Touring: the Tour Times boxes for the picked stop sit above the calendar,
+  // so a save shows up underneath. Prefill = the curtains on the calendar that
+  // Save would replace (removed ones are not times to keep).
+  const editorStop =
+    selectedVenue && isUuid(selectedVenue.id)
+      ? tourTimesStopFromRun(production, selectedVenue, visible)
+      : null;
+  const stopEditor = !touring ? null : editorStop ? (
+    <div className="admin-tour-stop-editor">
+      <TourTimesStopCard key={editorStop.runId} stop={editorStop} calendarMonth={yearMonth} />
+    </div>
+  ) : (
+    <p className="admin-footnote admin-tour-stop-editor">
+      {selectedVenue
+        ? "This stop's times can't be edited on this page."
+        : venueRuns.length > 0
+          ? "Pick a stop on the left to edit its times."
+          : "This tour has no stops listed yet, so there are no times to edit here."}
+    </p>
+  );
+
   const calendarPane = (
     <div className="admin-tour-calendar">
+      {stopEditor}
       <section className="admin-toolbar compact">
         <div className="admin-toolbar-actions">
           <RefreshScrapeDialog
@@ -286,6 +322,8 @@ export default async function AdminShowPage({
         byDay={byDay}
         productionId={production.id}
         monthConfirmed={monthConfirmed}
+        yearMonth={yearMonth}
+        venueId={selectedVenue?.id ?? null}
       />
     </div>
   );
@@ -397,50 +435,45 @@ export default async function AdminShowPage({
         calendarPane
       )}
 
-      <section className="admin-add">
-        <h2>Add a curtain</h2>
-        <p>
-          Saved as definite. A later refresh will not delete it. Times are
-          Europe/London.
-        </p>
-        <form action={addCurtainAction} className="admin-form row">
-          <input type="hidden" name="productionId" value={production.id} />
-          <label>
-            Date
-            <input type="date" name="date" required />
-          </label>
-          <label>
-            Time
-            <input type="time" name="time" required />
-          </label>
-          <label>
-            Venue{touring ? "" : " (optional)"}
-            <input
-              type="text"
-              name="venueName"
-              required={touring}
-              defaultValue={
-                touring
-                  ? selectedVenue?.venue_name ?? ""
-                  : (production.venue_summary ?? "")
-              }
-            />
-          </label>
-          <label>
-            City
-            <input
-              type="text"
-              name="venueCity"
-              defaultValue={touring ? selectedVenue?.city ?? "" : ""}
-            />
-          </label>
-          <label className="wide">
-            Address
-            <input type="text" name="venueAddress" />
-          </label>
-          <button type="submit">Add curtain</button>
-        </form>
-      </section>
+      {/* Resident only. Touring uses the stop editor above the calendar: a typed
+          venue name here could miss the stop and make duplicates. */}
+      {!touring ? (
+        <section className="admin-add">
+          <h2>Add a curtain</h2>
+          <p>
+            Saved as definite. A later refresh will not delete it. Times are
+            Europe/London.
+          </p>
+          <form action={addCurtainAction} className="admin-form row">
+            <input type="hidden" name="productionId" value={production.id} />
+            <label>
+              Date
+              <input type="date" name="date" required />
+            </label>
+            <label>
+              Time
+              <input type="time" name="time" required />
+            </label>
+            <label>
+              Venue (optional)
+              <input
+                type="text"
+                name="venueName"
+                defaultValue={production.venue_summary ?? ""}
+              />
+            </label>
+            <label>
+              City
+              <input type="text" name="venueCity" defaultValue="" />
+            </label>
+            <label className="wide">
+              Address
+              <input type="text" name="venueAddress" />
+            </label>
+            <button type="submit">Add curtain</button>
+          </form>
+        </section>
+      ) : null}
 
       {suppressed.length > 0 ? (
         <section className="admin-removed">
@@ -453,6 +486,15 @@ export default async function AdminShowPage({
                 <form action={restoreCurtainAction}>
                   <input type="hidden" name="productionId" value={production.id} />
                   <input type="hidden" name="curtainId" value={curtain.id} />
+                  {/* Come back on the restored curtain's own month. */}
+                  <input
+                    type="hidden"
+                    name="month"
+                    value={londonYmd(curtain.starts_at).slice(0, 7)}
+                  />
+                  {selectedVenue ? (
+                    <input type="hidden" name="venue" value={selectedVenue.id} />
+                  ) : null}
                   <button type="submit" className="admin-tiny">
                     Restore
                   </button>
