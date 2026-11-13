@@ -417,6 +417,7 @@ export default async function AdminShowPage({
                   <li key={run.id}>
                     <Link
                       href={standMonthHref(production.id, run)}
+                      scroll={false}
                       className={active ? "admin-itinerary-row active" : "admin-itinerary-row"}
                     >
                       <span className="admin-itinerary-venue">{venueRunTitle(run)}</span>
