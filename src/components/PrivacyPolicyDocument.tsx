@@ -11,7 +11,7 @@ export function PrivacyPolicyDocument() {
     <article className="legal-doc">
       <h1>ShowBuz Privacy Policy</h1>
       <p className="meta">
-        Effective date: September 1, 2026 · Last updated: September 1, 2026
+        Effective date: September 1, 2026 · Last updated: November 13, 2026
       </p>
 
       <p>
@@ -23,8 +23,8 @@ export function PrivacyPolicyDocument() {
       </p>
 
       <p>
-        ShowBuz is provided by ShowBuz, who is the data controller for the
-        purposes of UK GDPR and the Data Protection Act 2018.
+        ShowBuz is provided by Mike Kearsey Limited, which is the data
+        controller for the purposes of UK GDPR and the Data Protection Act 2018.
       </p>
 
       <h2>1. Data We Collect</h2>
@@ -206,7 +206,9 @@ export function PrivacyPolicyDocument() {
         Under UK GDPR, you have the right to access, correct, delete, or export
         your personal data, and to object to or restrict certain processing. If
         you have a ShowBuz account, email <Mail />. We aim to acknowledge
-        within 72 hours and complete requests within 30 days.
+        within 72 hours and complete requests within 30 days. You can also
+        delete your account yourself in the app: Settings → Account → Delete
+        my account. Your data is then erased within 30 days.
       </p>
       <h3 id="opt-out">Remove my contact details (no account needed)</h3>
       <p>
@@ -214,8 +216,8 @@ export function PrivacyPolicyDocument() {
         book and you do not have an account, you can remove those details here
         or by replying <strong>STOP</strong> or <strong>opt out</strong> to a
         ShowBuz WhatsApp or SMS. We match the mobile number or email the chair
-        used. This does not delete a ShowBuz account — account holders should
-        email <Mail />.
+        used. This does not delete a ShowBuz account — account holders can
+        delete their account in the app (Settings → Account) or email <Mail />.
       </p>
       <DepPrivacyOptOutForm />
       <p>

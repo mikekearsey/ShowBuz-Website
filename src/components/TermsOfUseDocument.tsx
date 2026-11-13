@@ -9,12 +9,12 @@ export function TermsOfUseDocument() {
     <article className="legal-doc">
       <h1>ShowBuz Terms of Use</h1>
       <p className="meta">
-        Effective date: September 1, 2026 · Last updated: September 1, 2026
+        Effective date: September 1, 2026 · Last updated: November 13, 2026
       </p>
 
       <p>
         These Terms of Use (&quot;Terms&quot;) govern your access to and use of
-        ShowBuz (the &quot;App&quot;), provided by ShowBuz (&quot;we&quot;,
+        ShowBuz (the &quot;App&quot;), provided by Mike Kearsey Limited (&quot;we&quot;,
         &quot;us&quot;, &quot;our&quot;). By creating an account or using the
         App, you agree to these Terms. If you do not agree, do not use the App.
       </p>

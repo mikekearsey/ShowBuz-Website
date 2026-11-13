@@ -45,6 +45,9 @@ export function Footer() {
           <a href="/guide" className="inline-flex min-h-phi-55 items-center hover:text-foreground">
             How to use
           </a>
+          <a href="/support" className="inline-flex min-h-phi-55 items-center hover:text-foreground">
+            Support
+          </a>
           <a href="/privacy" className="inline-flex min-h-phi-55 items-center hover:text-foreground">
             Privacy Policy
           </a>
